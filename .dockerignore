@@ -1,0 +1,12 @@
+# Never include the factory reset script in the Docker image
+reset_factory.sh
+
+# Development / project metadata
+.git
+.gitignore
+*.md
+claude.md
+skills/
+
+# Local data directory (databases are in a named volume at runtime)
+data/

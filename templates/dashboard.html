@@ -1,0 +1,966 @@
+{% extends "base.html" %}
+{% block title %}Dashboard – Sandbox99 Bookmark{% endblock %}
+
+{% block content %}
+
+<style>
+  /* Ensure the card containing an active or open dropdown completely overrides the grid stacking order */
+  .bookmark-card {
+    position: relative;
+    z-index: 1;
+    transition: z-index 0.1s ease;
+  }
+
+  /* Elevate the active card to the foreground layer only when a menu is open or an element inside is focused */
+  .bookmark-card:has(.show),
+  .bookmark-card:focus-within {
+    z-index: 1050 !important;
+  }
+
+  /* Bulk selection: outline cards whose checkbox is checked */
+  .bookmark-card:has(.bm-select-cb:checked) {
+    outline: 2px solid var(--bs-primary);
+    outline-offset: -2px;
+  }
+
+  /* Accordion: dark header to match surrounding card headers */
+  #adminSettingsAccordion .accordion-button {
+    background-color: #212529;
+    color: #fff;
+    font-weight: 600;
+  }
+  #adminSettingsAccordion .accordion-button:not(.collapsed) {
+    background-color: #212529;
+    color: #fff;
+    box-shadow: none;
+  }
+  #adminSettingsAccordion .accordion-button::after {
+    filter: brightness(0) invert(1);
+  }
+  #adminSettingsAccordion .accordion-button:focus {
+    box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, .15);
+  }
+
+</style>
+
+<div class="row mt-3 g-4">
+
+  <!-- ===== Sidebar ===== -->
+  <div class="col-md-3">
+
+    <!-- Folders -->
+    <div class="card shadow-sm border-0 mb-3">
+      <div class="card-header bg-dark text-white fw-semibold py-2">
+        <i class="bi bi-folder2-open me-2"></i>Categories
+      </div>
+      <div class="list-group list-group-flush">
+        <a href="{{ url_for('bookmarks.dashboard') }}"
+           class="list-group-item list-group-item-action d-flex align-items-center gap-2
+                  {% if not active_folder and not active_search %}active{% endif %}">
+          <i class="bi bi-bookmarks-fill"></i>
+          <span>All Bookmarks</span>
+        </a>
+        {% for category in folders %}
+          <div class="list-group-item list-group-item-action p-0
+                      {% if active_folder == category %}active{% endif %}">
+            <div class="d-flex justify-content-between align-items-center px-3 py-2">
+              <a href="{{ url_for('bookmarks.dashboard', folder=category) }}"
+                 class="d-flex align-items-center gap-2 flex-grow-1 min-w-0 text-decoration-none text-reset">
+                <span class="flex-shrink-0" style="font-size:1rem; line-height:1;">{{ emoji_map.get(category, "📁") }}</span>
+                <span class="text-truncate">{{ category }}</span>
+              </a>
+              <button type="button"
+                      class="btn btn-sm border-0 bg-transparent p-0 ms-1 flex-shrink-0"
+                      data-bs-toggle="modal"
+                      data-bs-target="#changeCategoryIconModal"
+                      data-category-name="{{ category }}"
+                      data-current-emoji="{{ emoji_map.get(category, '📁') }}"
+                      title="Change category icon">
+                <i class="bi bi-emoji-smile text-muted"></i>
+              </button>
+            </div>
+          </div>
+        {% endfor %}
+        {% if not folders %}
+          <div class="list-group-item text-body-secondary small py-3 text-center">
+            <i class="bi bi-folder-x d-block mb-1"></i>No categories yet
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Validate Bookmarks -->
+    <div class="card shadow-sm border-0 mb-3">
+      <div class="card-header bg-dark text-white fw-semibold py-2">
+        <i class="bi bi-shield-check me-2"></i>Link Validation
+      </div>
+      <div class="card-body p-3">
+        <p class="text-body-secondary small mb-2">
+          Check every saved link for broken or unreachable URLs.
+        </p>
+        <form method="POST" action="{{ url_for('bookmarks.validate') }}">
+          <div class="d-grid">
+            <button type="submit" class="btn btn-outline-warning btn-sm">
+              <i class="bi bi-shield-check me-1"></i>Validate Bookmarks
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Account Settings & Maintenance Accordion -->
+    <div class="accordion mb-3 shadow-sm" id="adminSettingsAccordion">
+      <div class="accordion-item border rounded">
+        <h2 class="accordion-header" id="adminSettingsHeading">
+          <button class="accordion-button collapsed py-2"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#adminSettingsBody"
+                  aria-expanded="false"
+                  aria-controls="adminSettingsBody">
+            ⚙️ Account Settings &amp; Maintenance
+          </button>
+        </h2>
+        <div id="adminSettingsBody"
+             class="accordion-collapse collapse"
+             aria-labelledby="adminSettingsHeading">
+          <div class="accordion-body p-0">
+
+            <!-- Security Setup -->
+            <div class="p-3 border-bottom">
+              <p class="fw-semibold text-body-secondary mb-2"
+                 style="font-size:.7rem; text-transform:uppercase; letter-spacing:.06em;">
+                <i class="bi bi-shield-lock me-1"></i>Security Setup
+              </p>
+              {% if current_user.has_2fa %}
+                <div class="d-flex align-items-center gap-2 mb-2">
+                  <span class="badge text-bg-success">
+                    <i class="bi bi-shield-check me-1"></i>2FA Protected
+                  </span>
+                </div>
+                <p class="text-body-secondary small mb-2">
+                  Two-factor authentication is active on your account.
+                </p>
+                <div class="d-grid">
+                  <button type="button" class="btn btn-outline-danger btn-sm"
+                          data-bs-toggle="modal" data-bs-target="#disable2FAModal">
+                    <i class="bi bi-shield-x me-1"></i>Disable 2FA
+                  </button>
+                </div>
+              {% else %}
+                <div class="d-flex align-items-center gap-2 mb-2">
+                  <span class="badge text-bg-warning">
+                    <i class="bi bi-shield-exclamation me-1"></i>2FA Disabled
+                  </span>
+                </div>
+                <p class="text-body-secondary small mb-2">
+                  Add an extra layer of security to protect your bookmarks.
+                </p>
+                <div class="d-grid">
+                  <a href="{{ url_for('auth.setup_2fa') }}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-shield-plus me-1"></i>Enable 2FA
+                  </a>
+                </div>
+              {% endif %}
+            </div>
+
+            <!-- Data Portability -->
+            <div class="p-3 border-bottom">
+              <p class="fw-semibold text-body-secondary mb-2"
+                 style="font-size:.7rem; text-transform:uppercase; letter-spacing:.06em;">
+                <i class="bi bi-database-down me-1"></i>Data Portability
+              </p>
+              <p class="text-body-secondary small mb-2">
+                Export your bookmarks as a standard Netscape HTML file compatible
+                with all major browsers, or restore from a previous backup.
+              </p>
+
+              <div class="d-grid mb-2">
+                <a href="{{ url_for('bookmarks.export') }}"
+                   class="btn btn-outline-secondary btn-sm">
+                  <i class="bi bi-download me-1"></i>Export Bookmarks (HTML)
+                </a>
+              </div>
+
+              <form method="POST"
+                    action="{{ url_for('bookmarks.import_bookmarks') }}"
+                    enctype="multipart/form-data">
+                <label for="import-file" class="form-label small fw-medium mb-1">
+                  Restore from backup
+                </label>
+                <input type="file"
+                       class="form-control form-control-sm mb-2"
+                       id="import-file"
+                       name="file"
+                       accept=".html"
+                       required>
+                <div class="d-grid">
+                  <button type="submit" class="btn btn-primary btn-sm">
+                    <i class="bi bi-upload me-1"></i>Upload &amp; Restore
+                  </button>
+                </div>
+              </form>
+
+            </div>
+
+            <!-- Change Password -->
+            <div class="p-3 border-bottom">
+              <p class="fw-semibold text-body-secondary mb-2"
+                 style="font-size:.7rem; text-transform:uppercase; letter-spacing:.06em;">
+                <i class="bi bi-key me-1"></i>Change Password
+              </p>
+              <p class="text-body-secondary small mb-2">
+                Update your login passphrase. Your current password is required to proceed.
+              </p>
+              <div class="d-grid">
+                <button type="button" class="btn btn-outline-primary btn-sm"
+                        data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                  <i class="bi bi-key-fill me-1"></i>Change Password
+                </button>
+              </div>
+            </div>
+
+            <!-- Danger Zone -->
+            <div class="p-3 bg-danger-subtle border-top border-danger">
+              <p class="fw-semibold text-danger mb-2"
+                 style="font-size:.7rem; text-transform:uppercase; letter-spacing:.06em;">
+                <i class="bi bi-exclamation-triangle-fill me-1"></i>Danger Zone
+              </p>
+              <p class="text-body-secondary small mb-2">
+                Permanently delete your account and all saved bookmarks.
+                This action cannot be undone.
+              </p>
+              <div class="d-grid">
+                <button type="button" class="btn btn-danger btn-sm"
+                        data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+                  <i class="bi bi-person-x-fill me-1"></i>Delete Account
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /col-md-3 -->
+
+  <!-- ===== Main Content ===== -->
+  <div class="col-md-9">
+
+    <!-- Toolbar -->
+    <div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
+      <form method="GET" action="{{ url_for('bookmarks.dashboard') }}"
+            class="d-flex flex-grow-1 gap-2">
+        {% if active_folder %}
+          <input type="hidden" name="folder" value="{{ active_folder }}">
+        {% endif %}
+        <input type="text" class="form-control" name="search"
+               placeholder="Search by title, URL, folder, or tags…"
+               value="{{ active_search }}">
+        <button type="submit" class="btn btn-primary px-3">
+          <i class="bi bi-search"></i>
+        </button>
+        {% if active_search %}
+          <a href="{{ url_for('bookmarks.dashboard', folder=active_folder) }}"
+             class="btn btn-outline-secondary" title="Clear search">
+            <i class="bi bi-x-lg"></i> Clear
+          </a>
+        {% endif %}
+      </form>
+      <button type="button" class="btn btn-success"
+              data-bs-toggle="modal" data-bs-target="#addBookmarkModal">
+        <i class="bi bi-plus-lg me-1"></i>Add Bookmark
+      </button>
+    </div>
+
+    <!-- Context label -->
+    <p class="text-body-secondary small mb-3">
+      {% if active_search %}
+        <i class="bi bi-search me-1"></i>
+        {{ bookmarks|length }} result(s) for "<strong>{{ active_search }}</strong>"
+      {% elif active_folder %}
+        <i class="bi bi-folder me-1"></i>
+        <strong>{{ active_folder }}</strong> &mdash; {{ bookmarks|length }} bookmark(s)
+      {% else %}
+        <i class="bi bi-bookmarks me-1"></i>
+        All bookmarks &mdash; {{ bookmarks|length }} total
+      {% endif %}
+    </p>
+
+    <!-- Bookmark grid -->
+    {% if bookmarks %}
+      <div class="row g-3">
+        {% for bm in bookmarks %}
+          <div class="col-md-6">
+            <div class="card h-100 shadow-sm bookmark-card
+                        {% if bm.status == 'broken' %}border border-danger bg-danger-subtle
+                        {% elif bm.status == 'warning' %}border border-warning bg-warning-subtle
+                        {% else %}border-0{% endif %}">
+              <div class="card-body pb-2">
+                <div class="d-flex align-items-start gap-2 mb-2">
+                  <input type="checkbox"
+                         class="form-check-input mt-1 flex-shrink-0 bm-select-cb"
+                         value="{{ bm.id }}"
+                         aria-label="Select {{ bm.title }}">
+                  <h6 class="card-title fw-semibold text-truncate mb-0" title="{{ bm.title }}">
+                    {{ bm.title }}
+                  </h6>
+                </div>
+                {% if bm.description %}
+                  <p class="text-body-secondary small mb-2 description-clamp">{{ bm.description }}</p>
+                {% endif %}
+                <a href="{{ bm.url | safe_url }}" target="_blank" rel="noopener noreferrer"
+                   class="text-body-secondary small text-truncate d-block mb-3" title="{{ bm.url }}">
+                  <i class="bi bi-link-45deg me-1"></i>{{ bm.url }}
+                </a>
+                <div class="d-flex flex-wrap gap-1">
+                  <span class="badge text-bg-secondary">
+                    <i class="bi bi-folder me-1"></i>{{ bm.folder }}
+                  </span>
+                  {% if bm.tags %}
+                    {% for raw_tag in bm.tags.split(',') %}
+                      {% set tag = raw_tag.strip() %}
+                      {% if tag %}
+                        <span class="badge text-bg-info">{{ tag }}</span>
+                      {% endif %}
+                    {% endfor %}
+                  {% endif %}
+                </div>
+
+                {% if bm.status == 'broken' %}
+                  <div class="d-flex align-items-center gap-2 mt-2">
+                    <span class="badge text-bg-danger">
+                      <i class="bi bi-wifi-off me-1"></i>Link Broken
+                    </span>
+                    {% if bm.last_validated_at %}
+                      <span class="text-body-secondary" style="font-size:.7rem;">
+                        Checked: {{ bm.last_validated_at }}
+                      </span>
+                    {% endif %}
+                  </div>
+                {% elif bm.status == 'warning' %}
+                  <div class="d-flex align-items-center gap-2 mt-2">
+                    <span class="badge text-bg-warning">
+                      <i class="bi bi-exclamation-triangle me-1"></i>Link Warning
+                    </span>
+                    {% if bm.last_validated_at %}
+                      <span class="text-body-secondary" style="font-size:.7rem;">
+                        Checked: {{ bm.last_validated_at }}
+                      </span>
+                    {% endif %}
+                  </div>
+                {% endif %}
+
+              </div>
+              <div class="card-footer bg-transparent border-top-0 d-flex justify-content-end gap-2 pt-0 pb-3 px-3">
+
+                <!-- Open split button -->
+                <div class="btn-group btn-group-sm">
+                  <a href="{{ url_for('bookmarks.click', id=bm.id) }}"
+                     target="_blank" rel="noopener noreferrer"
+                     class="btn btn-primary">
+                    <i class="bi bi-box-arrow-up-right me-1"></i>Open
+                  </a>
+                  <button type="button"
+                          class="btn btn-primary dropdown-toggle dropdown-toggle-split"
+                          data-bs-toggle="dropdown" aria-expanded="false">
+                    <span class="visually-hidden">Open options</span>
+                  </button>
+                  <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                      <a class="dropdown-item"
+                         href="{{ url_for('bookmarks.click', id=bm.id) }}"
+                         target="_blank" rel="noopener noreferrer">
+                        <i class="bi bi-box-arrow-up-right me-2"></i>Open in New Tab
+                      </a>
+                    </li>
+                    <li>
+                      <button class="dropdown-item"
+                              data-click-url="{{ url_for('bookmarks.click', id=bm.id) }}"
+                              onclick="window.open(this.dataset.clickUrl,'_blank','noopener,noreferrer,width=1200,height=800')">
+                        <i class="bi bi-window me-2"></i>Open in New Window
+                      </button>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                      <span class="dropdown-item disabled text-body-secondary small">
+                        <i class="bi bi-shield-lock me-2"></i>Right-click → Open in Private Window
+                      </span>
+                    </li>
+                  </ul>
+                </div>
+
+                <!-- Copy URL — inline badge confirmation on click -->
+                <button type="button"
+                        class="btn btn-outline-secondary btn-sm bm-copy-btn"
+                        title="Copy URL"
+                        data-url="{{ bm.url | safe_url }}">
+                  <i class="bi bi-clipboard"></i>
+                </button>
+
+                <!-- More actions -->
+                <div class="dropdown">
+                  <button type="button"
+                          class="btn btn-outline-secondary btn-sm"
+                          data-bs-toggle="dropdown" aria-expanded="false"
+                          title="More actions">
+                    <i class="bi bi-three-dots-vertical"></i>
+                  </button>
+                  <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                      <button class="dropdown-item"
+                              data-bs-toggle="modal"
+                              data-bs-target="#bookmarkDetailsModal"
+                              data-title="{{ bm.title }}"
+                              data-url="{{ bm.url | safe_url }}"
+                              data-created="{{ bm.created_at or '' }}"
+                              data-updated="{{ bm.updated_at or '' }}"
+                              data-accessed="{{ bm.last_accessed_at or '' }}">
+                        <i class="bi bi-info-circle me-2"></i>Details
+                      </button>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                      <a class="dropdown-item"
+                         href="{{ url_for('bookmarks.edit', id=bm.id) }}">
+                        <i class="bi bi-pencil me-2"></i>Edit
+                      </a>
+                    </li>
+                    <li>
+                      <button class="dropdown-item text-danger bm-delete-btn"
+                              data-delete-url="{{ url_for('bookmarks.delete', id=bm.id) }}"
+                              data-title="{{ bm.title }}">
+                        <i class="bi bi-trash me-2"></i>Delete
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="text-center text-body-secondary py-5">
+        <i class="bi bi-bookmark-x display-3 d-block mb-3 opacity-50"></i>
+        <p class="mb-1 fw-medium">No bookmarks found.</p>
+        <p class="small">
+          {% if active_search or active_folder %}
+            Try a different filter or
+            <a href="{{ url_for('bookmarks.dashboard') }}">view all bookmarks</a>.
+          {% else %}
+            Click <strong>Add Bookmark</strong> above to get started.
+          {% endif %}
+        </p>
+      </div>
+    {% endif %}
+
+  </div><!-- /col-md-9 -->
+</div><!-- /row -->
+
+
+<!-- ===== Bulk Action Bar ===== -->
+<div id="bulkActionBar"
+     class="d-none"
+     data-delete-url="{{ url_for('bookmarks.bulk_delete') }}"
+     style="position:fixed; bottom:0; left:0; right:0; z-index:1040;">
+  <div class="bg-primary text-white px-4 py-2 d-flex align-items-center
+              justify-content-between flex-wrap gap-2 shadow-lg border-top border-primary-subtle">
+    <div class="d-flex align-items-center gap-3">
+      <span class="fw-semibold small">
+        <i class="bi bi-check2-square me-1"></i>
+        <span id="bulkCount">0</span> selected
+      </span>
+      <button type="button" id="bulkSelectAll" class="btn btn-sm btn-outline-light py-1">
+        Select All Visible
+      </button>
+      <button type="button" id="bulkClearAll" class="btn btn-sm btn-outline-light py-1">
+        Clear
+      </button>
+    </div>
+    <div class="d-flex gap-2">
+      <button type="button" id="bulkDeleteBtn" class="btn btn-sm btn-danger py-1">
+        <i class="bi bi-trash me-1"></i>Delete Selected
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Bookmark Details Modal ===== -->
+<div class="modal fade" id="bookmarkDetailsModal" tabindex="-1"
+     aria-labelledby="bookmarkDetailsLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content shadow">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title" id="bookmarkDetailsLabel">
+          <i class="bi bi-info-circle me-2"></i>Bookmark Details
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p id="detail-title" class="fw-semibold mb-1 text-truncate"></p>
+        <a id="detail-url" href="#" target="_blank" rel="noopener noreferrer"
+           class="text-break small text-body-secondary d-block mb-3"></a>
+        <table class="table table-sm table-borderless mb-0">
+          <tbody>
+            <tr>
+              <td class="text-body-secondary small ps-0 w-50">Date Created</td>
+              <td class="small" id="detail-created"></td>
+            </tr>
+            <tr>
+              <td class="text-body-secondary small ps-0">Last Modified</td>
+              <td class="small" id="detail-updated"></td>
+            </tr>
+            <tr>
+              <td class="text-body-secondary small ps-0">Last Accessed</td>
+              <td class="small" id="detail-accessed"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="modal-footer border-top">
+        <button type="button" class="btn btn-secondary btn-sm"
+                data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Shared delete form — action set by JS before submit -->
+<form id="deleteForm" method="POST" style="display:none;"></form>
+
+<!-- Shared bulk action form — populated and submitted by JS -->
+<form id="bulkForm" method="POST" style="display:none;"></form>
+
+<script>
+(function () {
+
+  // Copy URL: swap button content to check icon + "Copied!" badge,
+  // then restore original HTML after 1.5 s.
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('.bm-copy-btn');
+    if (!btn) return;
+    var originalHTML = btn.innerHTML;
+    var originalClass = btn.className;
+    navigator.clipboard.writeText(btn.dataset.url).then(function () {
+      btn.innerHTML = '<i class="bi bi-clipboard-check"></i>'
+                    + '<span class="badge bg-success ms-1">Copied!</span>';
+      btn.classList.replace('btn-outline-secondary', 'btn-outline-success');
+      setTimeout(function () {
+        btn.innerHTML = originalHTML;
+        btn.className  = originalClass;
+      }, 1500);
+    });
+  });
+
+  // Populate Details modal from trigger's data-* attributes.
+  var detailsModal = document.getElementById('bookmarkDetailsModal');
+  if (detailsModal) {
+    detailsModal.addEventListener('show.bs.modal', function (e) {
+      var t = e.relatedTarget;
+      detailsModal.querySelector('#detail-title').textContent    = t.dataset.title    || '—';
+      var urlEl = detailsModal.querySelector('#detail-url');
+      urlEl.textContent = t.dataset.url || '—';
+      urlEl.href        = t.dataset.url || '#';
+      detailsModal.querySelector('#detail-created').textContent  = t.dataset.created  || '—';
+      detailsModal.querySelector('#detail-updated').textContent  = t.dataset.updated  || '—';
+      detailsModal.querySelector('#detail-accessed').textContent = t.dataset.accessed || 'Never';
+    });
+  }
+
+  // Confirm and submit delete via shared form.
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('.bm-delete-btn');
+    if (!btn) return;
+    if (!confirm('Delete "' + (btn.dataset.title || 'this bookmark') + '"?')) return;
+    var form = document.getElementById('deleteForm');
+    form.action = btn.dataset.deleteUrl;
+    form.submit();
+  });
+
+  // Show / hide password toggle for .pw-toggle buttons (used in Change Password modal).
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('.pw-toggle');
+    if (!btn) return;
+    var input = document.getElementById(btn.dataset.target);
+    var icon  = btn.querySelector('i');
+    if (!input) return;
+    if (input.type === 'password') {
+      input.type     = 'text';
+      icon.className = 'bi bi-eye-slash';
+    } else {
+      input.type     = 'password';
+      icon.className = 'bi bi-eye';
+    }
+  });
+
+})();
+</script>
+
+<script>
+(function () {
+  var bar      = document.getElementById('bulkActionBar');
+  var countEl  = document.getElementById('bulkCount');
+  var selected = new Set();
+
+  function syncBar() {
+    var n = selected.size;
+    countEl.textContent = n;
+    bar.classList.toggle('d-none', n === 0);
+  }
+
+  // Individual checkbox toggle
+  document.addEventListener('change', function (e) {
+    var cb = e.target.closest('.bm-select-cb');
+    if (!cb) return;
+    if (cb.checked) selected.add(cb.value);
+    else selected.delete(cb.value);
+    syncBar();
+  });
+
+  // Select all visible checkboxes
+  document.getElementById('bulkSelectAll').addEventListener('click', function () {
+    document.querySelectorAll('.bm-select-cb').forEach(function (cb) {
+      cb.checked = true;
+      selected.add(cb.value);
+    });
+    syncBar();
+  });
+
+  // Clear all selections
+  document.getElementById('bulkClearAll').addEventListener('click', function () {
+    document.querySelectorAll('.bm-select-cb').forEach(function (cb) { cb.checked = false; });
+    selected.clear();
+    syncBar();
+  });
+
+  // Build and submit the bulk form with current selection + optional extra fields
+  function submitBulk(action, extras) {
+    var form = document.getElementById('bulkForm');
+    form.innerHTML = '';
+    form.action = action;
+    selected.forEach(function (id) {
+      var inp = document.createElement('input');
+      inp.type = 'hidden'; inp.name = 'bookmark_ids'; inp.value = id;
+      form.appendChild(inp);
+    });
+    if (extras) {
+      Object.keys(extras).forEach(function (name) {
+        var inp = document.createElement('input');
+        inp.type = 'hidden'; inp.name = name; inp.value = extras[name];
+        form.appendChild(inp);
+      });
+    }
+    form.submit();
+  }
+
+  // Bulk delete
+  document.getElementById('bulkDeleteBtn').addEventListener('click', function () {
+    if (!confirm('Permanently delete ' + selected.size + ' selected bookmark(s)? This cannot be undone.')) return;
+    submitBulk(bar.dataset.deleteUrl);
+  });
+
+
+})();
+</script>
+
+<!-- ===== Change Password Modal ===== -->
+<!-- ===== Disable 2FA Modal ===== -->
+<div class="modal fade" id="disable2FAModal" tabindex="-1"
+     aria-labelledby="disable2FALabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content shadow border-danger">
+      <form method="POST" action="{{ url_for('auth.disable_2fa') }}">
+        <div class="modal-header bg-danger text-white border-bottom-0">
+          <h5 class="modal-title" id="disable2FALabel">
+            <i class="bi bi-shield-x me-2"></i>Disable Two-Factor Authentication
+          </h5>
+          <button type="button" class="btn-close btn-close-white"
+                  data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-danger d-flex gap-2 align-items-start py-2 mb-3">
+            <i class="bi bi-shield-exclamation flex-shrink-0 mt-1"></i>
+            <span class="small">
+              <strong>This will remove 2FA protection from your account.</strong>
+              Your account will be secured by password only after this action.
+            </span>
+          </div>
+          <div class="mb-1">
+            <label for="disable-2fa-token" class="form-label fw-medium">
+              Authenticator Code
+            </label>
+            <input type="text" class="form-control font-monospace"
+                   id="disable-2fa-token" name="token"
+                   placeholder="6-digit code from your app"
+                   inputmode="numeric" pattern="[0-9]{6}"
+                   maxlength="6" autocomplete="one-time-code"
+                   required autofocus>
+            <div class="form-text text-body-secondary">
+              Enter the current code from your authenticator app to confirm.
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-top">
+          <button type="button" class="btn btn-secondary"
+                  data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-danger">
+            <i class="bi bi-shield-x me-1"></i>Disable 2FA
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="changePasswordModal" tabindex="-1"
+     aria-labelledby="changePasswordLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content shadow">
+      <form method="POST" action="{{ url_for('auth.change_password') }}">
+        <div class="modal-header border-bottom">
+          <h5 class="modal-title" id="changePasswordLabel">
+            <i class="bi bi-key-fill me-2"></i>Change Password
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="cp-current" class="form-label fw-medium">Current Password</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-lock"></i></span>
+              <input type="password" class="form-control" id="cp-current"
+                     name="current_password" placeholder="Enter your current password"
+                     required autofocus>
+              <button type="button" class="btn btn-outline-secondary pw-toggle"
+                      data-target="cp-current" tabindex="-1"
+                      aria-label="Toggle password visibility">
+                <i class="bi bi-eye"></i>
+              </button>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="cp-new" class="form-label fw-medium">New Password</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+              <input type="password" class="form-control" id="cp-new"
+                     name="new_password" placeholder="Choose a new passphrase"
+                     minlength="14" maxlength="64" required>
+              <button type="button" class="btn btn-outline-secondary pw-toggle"
+                      data-target="cp-new" tabindex="-1"
+                      aria-label="Toggle password visibility">
+                <i class="bi bi-eye"></i>
+              </button>
+            </div>
+            <div class="form-text text-body-secondary">
+              14–64 characters. Any combination except spaces.
+            </div>
+          </div>
+          <div class="mb-1">
+            <label for="cp-confirm" class="form-label fw-medium">Confirm New Password</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+              <input type="password" class="form-control" id="cp-confirm"
+                     name="confirm_new_password" placeholder="Repeat your new passphrase"
+                     minlength="14" maxlength="64" required>
+              <button type="button" class="btn btn-outline-secondary pw-toggle"
+                      data-target="cp-confirm" tabindex="-1"
+                      aria-label="Toggle password visibility">
+                <i class="bi bi-eye"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-top">
+          <button type="button" class="btn btn-secondary"
+                  data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-check-lg me-1"></i>Update Password
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Delete Account Modal ===== -->
+<div class="modal fade" id="deleteAccountModal" tabindex="-1"
+     aria-labelledby="deleteAccountLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content shadow border-danger">
+      <form method="POST" action="{{ url_for('auth.delete_account') }}">
+        <div class="modal-header bg-danger text-white border-bottom-0">
+          <h5 class="modal-title" id="deleteAccountLabel">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>Delete Account
+          </h5>
+          <button type="button" class="btn-close btn-close-white"
+                  data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-danger d-flex gap-2 align-items-start py-2 mb-3">
+            <i class="bi bi-shield-exclamation flex-shrink-0 mt-1"></i>
+            <span class="small">
+              <strong>This action is permanent and irreversible.</strong>
+              Your account and every bookmark you have saved will be deleted
+              immediately and cannot be recovered.
+            </span>
+          </div>
+          <div class="mb-1">
+            <label for="delete-account-password" class="form-label fw-medium">
+              Confirm Password
+            </label>
+            <input type="password" class="form-control" id="delete-account-password"
+                   name="password" placeholder="Enter your current password"
+                   required autofocus>
+          </div>
+        </div>
+        <div class="modal-footer border-top">
+          <button type="button" class="btn btn-secondary"
+                  data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-danger">
+            <i class="bi bi-trash3-fill me-1"></i>Permanently Delete My Data
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Add Bookmark Modal ===== -->
+<div class="modal fade" id="addBookmarkModal" tabindex="-1"
+     aria-labelledby="addBookmarkLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content shadow">
+      <form method="POST" action="{{ url_for('bookmarks.add') }}">
+        <div class="modal-header border-bottom">
+          <h5 class="modal-title" id="addBookmarkLabel">
+            <i class="bi bi-bookmark-plus me-2"></i>Add Bookmark
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="add-title" class="form-label fw-medium">Title</label>
+            <input type="text" class="form-control" id="add-title" name="title"
+                   placeholder="Leave blank to auto-fill from page metadata">
+            <div class="form-text">Auto-scraped from the URL if left empty.</div>
+          </div>
+          <div class="mb-3">
+            <label for="add-url" class="form-label fw-medium">
+              URL <span class="text-danger">*</span>
+            </label>
+            <input type="url" class="form-control" id="add-url" name="url"
+                   placeholder="https://example.com" required>
+          </div>
+          <div class="mb-3">
+            <label for="add-description" class="form-label fw-medium">Description</label>
+            <textarea class="form-control" id="add-description" name="description"
+                      rows="2" placeholder="Leave blank to auto-fill from page metadata"></textarea>
+            <div class="form-text">Auto-scraped from the URL if left empty.</div>
+          </div>
+          <div class="mb-3">
+            <label for="add-folder" class="form-label fw-medium">Category</label>
+            <input type="text" class="form-control" id="add-folder" name="folder"
+                   placeholder="Uncategorized" value="{{ active_folder }}"
+                   list="folder-options" autocomplete="off">
+            <datalist id="folder-options">
+              {% for category in folders %}
+                <option value="{{ category }}">
+              {% endfor %}
+            </datalist>
+            <div class="form-text">Type a new category or choose an existing one.</div>
+          </div>
+          <div class="mb-1">
+            <label for="add-tags" class="form-label fw-medium">Tags</label>
+            <input type="text" class="form-control" id="add-tags" name="tags"
+                   placeholder="e.g. python, tutorial, reference">
+            <div class="form-text">Comma-separated. Optional.</div>
+          </div>
+        </div>
+        <div class="modal-footer border-top">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-success">
+            <i class="bi bi-plus-lg me-1"></i>Add Bookmark
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Change Category Icon Modal ===== -->
+<div class="modal fade" id="changeCategoryIconModal" tabindex="-1"
+     aria-labelledby="changeCategoryIconLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content shadow">
+      <form method="POST" action="{{ url_for('bookmarks.update_category_icon') }}">
+        <div class="modal-header border-bottom">
+          <h5 class="modal-title" id="changeCategoryIconLabel">
+            <i class="bi bi-emoji-smile me-2"></i>Change Category Icon
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="ci-category-name" name="category_name" value="">
+          <div class="mb-1">
+            <label for="ci-emoji" class="form-label fw-medium">Choose an icon</label>
+            <select class="form-select" id="ci-emoji" name="emoji">
+              <option value="📁">📁  Folder (default)</option>
+              <option value="💻">💻  Tech / Code</option>
+              <option value="🖥️">🖥️  Desktop</option>
+              <option value="📱">📱  Mobile / Apps</option>
+              <option value="🛠️">🛠️  Dev Tools</option>
+              <option value="🚀">🚀  Projects</option>
+              <option value="🤖">🤖  AI / Automation</option>
+              <option value="🎮">🎮  Gaming</option>
+              <option value="🎬">🎬  Film &amp; Video</option>
+              <option value="🎵">🎵  Music</option>
+              <option value="🎨">🎨  Design / Art</option>
+              <option value="📚">📚  Learning</option>
+              <option value="🔍">🔍  Research</option>
+              <option value="📰">📰  News</option>
+              <option value="💼">💼  Work</option>
+              <option value="🏠">🏠  Home</option>
+              <option value="✈️">✈️  Travel</option>
+              <option value="🍕">🍕  Food</option>
+              <option value="💡">💡  Ideas</option>
+              <option value="⭐">⭐  Favorites</option>
+              <option value="🎯">🎯  Goals</option>
+              <option value="💰">💰  Finance</option>
+              <option value="🛒">🛒  Shopping</option>
+              <option value="🔖">🔖  Reading List</option>
+              <option value="⚓">⚓  Pinned</option>
+            </select>
+            <div class="form-text text-body-secondary mt-1">
+              Applies to this category across your entire sidebar.
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-top">
+          <button type="button" class="btn btn-secondary"
+                  data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-check-lg me-1"></i>Save Icon
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var ciModal = document.getElementById('changeCategoryIconModal');
+  if (!ciModal) return;
+  ciModal.addEventListener('show.bs.modal', function (e) {
+    var btn = e.relatedTarget && e.relatedTarget.closest('[data-category-name]');
+    document.getElementById('ci-category-name').value = btn ? (btn.dataset.categoryName || '') : '';
+    var sel = document.getElementById('ci-emoji');
+    if (sel) sel.value = btn ? (btn.dataset.currentEmoji || '📁') : '📁';
+  });
+})();
+</script>
+
+{% endblock %}

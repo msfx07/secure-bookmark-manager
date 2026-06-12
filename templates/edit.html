@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Edit Bookmark – Sandbox99 Bookmark{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-4">
+  <div class="col-md-6">
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-dark text-white fw-semibold py-2">
+        <i class="bi bi-pencil-square me-2"></i>Edit Bookmark
+      </div>
+      <div class="card-body p-4">
+        <form method="POST" action="{{ url_for('bookmarks.edit', id=bookmark.id) }}">
+          <div class="mb-3">
+            <label for="title" class="form-label fw-medium">
+              Title <span class="text-danger">*</span>
+            </label>
+            <input type="text" class="form-control" id="title" name="title"
+                   value="{{ bookmark.title }}" required autofocus>
+          </div>
+          <div class="mb-3">
+            <label for="url" class="form-label fw-medium">
+              URL <span class="text-danger">*</span>
+            </label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-link-45deg"></i></span>
+              <input type="url" class="form-control" id="url" name="url"
+                     value="{{ bookmark.url }}" required>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="description" class="form-label fw-medium">Description</label>
+            <textarea class="form-control" id="description" name="description"
+                      rows="3" placeholder="Short description of this page">{{ bookmark.description or '' }}</textarea>
+            <div class="form-text">Optional. Displayed as subtext on bookmark cards.</div>
+          </div>
+          <div class="mb-3">
+            <label for="folder" class="form-label fw-medium">Folder</label>
+            <input type="text" class="form-control" id="folder" name="folder"
+                   value="{{ bookmark.folder }}">
+          </div>
+          <div class="mb-4">
+            <label for="tags" class="form-label fw-medium">Tags</label>
+            <input type="text" class="form-control" id="tags" name="tags"
+                   value="{{ bookmark.tags }}" placeholder="e.g. python, tutorial">
+            <div class="form-text">Comma-separated. Optional.</div>
+          </div>
+          <div class="d-flex justify-content-between align-items-center">
+            <a href="{{ url_for('bookmarks.dashboard', folder=bookmark.folder) }}"
+               class="btn btn-secondary">
+              <i class="bi bi-arrow-left me-1"></i>Cancel
+            </a>
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-save me-1"></i>Save Changes
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

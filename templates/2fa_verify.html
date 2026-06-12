@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Two-Factor Verification – Sandbox99 Bookmark{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+  <div class="col-md-4">
+    <div class="card shadow-sm border-0">
+
+      <div class="card-header bg-dark text-white fw-semibold py-2">
+        <i class="bi bi-shield-lock-fill me-2"></i>Two-Factor Verification
+      </div>
+
+      <div class="card-body p-4">
+        <div class="text-center mb-4">
+          <i class="bi bi-phone display-4 text-primary d-block mb-2"></i>
+          <p class="text-muted small mb-0">
+            Open your authenticator app and enter the
+            <strong>6-digit code</strong> for
+            <strong>SecureBookmarkManager</strong>.
+          </p>
+        </div>
+
+        <form method="POST" action="{{ url_for('auth.verify_2fa') }}">
+          <div class="mb-4">
+            <label for="token" class="form-label fw-medium">
+              Verification Code <span class="text-danger">*</span>
+            </label>
+            <input type="text"
+                   class="form-control form-control-lg text-center font-monospace"
+                   id="token" name="token"
+                   inputmode="numeric"
+                   pattern="[0-9]{6}"
+                   maxlength="6"
+                   placeholder="000000"
+                   autocomplete="one-time-code"
+                   required autofocus>
+            <div class="form-text text-center">The code refreshes every 30 seconds.</div>
+          </div>
+
+          <div class="d-grid">
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-check2-circle me-2"></i>Verify Token
+            </button>
+          </div>
+        </form>
+
+        <hr class="my-3">
+        <p class="text-center text-muted small mb-0">
+          Not you?
+          <a href="{{ url_for('auth.logout') }}">Sign out</a>
+        </p>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

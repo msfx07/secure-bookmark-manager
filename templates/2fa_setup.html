@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Enable Two-Factor Authentication – Sandbox99 Bookmark{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-4">
+  <div class="col-md-6">
+    <div class="card shadow-sm border-0">
+
+      <div class="card-header bg-dark text-white fw-semibold py-2">
+        <i class="bi bi-shield-lock-fill me-2"></i>Enable Two-Factor Authentication
+      </div>
+
+      <div class="card-body p-4">
+
+        <!-- Step 1 — Download an authenticator -->
+        <h6 class="fw-semibold mb-1">Step 1 — Get an authenticator app</h6>
+        <p class="text-muted small mb-3">
+          Install any TOTP-compatible authenticator on your phone.
+          Popular choices include
+          <strong>Google Authenticator</strong>,
+          <strong>Authy</strong>, or
+          <strong>Microsoft Authenticator</strong>.
+        </p>
+
+        <!-- Step 2 — Scan the QR code -->
+        <h6 class="fw-semibold mb-1">Step 2 — Scan the QR code</h6>
+        <p class="text-muted small mb-1">
+          Open your authenticator app, tap <em>Add account</em>, and scan
+          the image below.
+        </p>
+
+        <img src="data:image/png;base64,{{ qr_b64 }}"
+             class="img-fluid mx-auto d-block my-4 rounded"
+             alt="2FA QR Code"
+             style="max-width: 220px;">
+
+        <!-- Manual entry fallback -->
+        <div class="mb-4">
+          <p class="text-muted small mb-1">
+            Can't scan? Enter this key manually in your app:
+          </p>
+          <div class="input-group input-group-sm">
+            <input type="text" class="form-control font-monospace text-center"
+                   id="manual-secret" value="{{ secret }}" readonly>
+            <button class="btn btn-outline-secondary" type="button"
+                    onclick="navigator.clipboard.writeText('{{ secret }}');this.textContent='Copied!';">
+              <i class="bi bi-clipboard me-1"></i>Copy
+            </button>
+          </div>
+          <div class="form-text">
+            Keep this key private. It grants access to your 2FA codes.
+          </div>
+        </div>
+
+        <!-- Step 3 — Verify the first code -->
+        <h6 class="fw-semibold mb-1">Step 3 — Confirm with a live code</h6>
+        <p class="text-muted small mb-3">
+          Enter the 6-digit code your authenticator app is currently showing
+          to activate 2FA on your account.
+        </p>
+
+        <form method="POST" action="{{ url_for('auth.setup_2fa') }}">
+          <div class="mb-4">
+            <label for="token" class="form-label fw-medium">
+              Verification Code <span class="text-danger">*</span>
+            </label>
+            <input type="text"
+                   class="form-control form-control-lg text-center font-monospace"
+                   id="token" name="token"
+                   inputmode="numeric"
+                   pattern="[0-9]{6}"
+                   maxlength="6"
+                   placeholder="000000"
+                   autocomplete="one-time-code"
+                   required autofocus>
+            <div class="form-text">The code refreshes every 30 seconds.</div>
+          </div>
+          <div class="d-flex justify-content-between align-items-center">
+            <a href="{{ url_for('bookmarks.dashboard') }}" class="btn btn-secondary">
+              <i class="bi bi-x-lg me-1"></i>Cancel
+            </a>
+            <button type="submit" class="btn btn-success">
+              <i class="bi bi-shield-check me-1"></i>Activate 2FA
+            </button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

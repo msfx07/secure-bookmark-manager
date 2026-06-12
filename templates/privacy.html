@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Privacy Policy – Sandbox99 Bookmark{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-4">
+  <div class="col-lg-7 col-md-9">
+
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-dark text-white fw-semibold py-2">
+        <i class="bi bi-shield-lock me-2"></i>Privacy Policy
+      </div>
+      <div class="card-body p-4">
+
+        <p class="text-body-secondary small mb-4">
+          Last updated: June 2026
+        </p>
+
+        <h6 class="fw-semibold mb-2">1. Data We Collect</h6>
+        <p class="text-body-secondary mb-4">
+          Sandbox99 Bookmark collects only the information you provide directly:
+          your username, a bcrypt-hashed password, an optional TOTP 2FA secret, and
+          the bookmark data (URLs, titles, descriptions, folders, and tags) you choose
+          to save. No analytics, advertising identifiers, or behavioural tracking data
+          are collected.
+        </p>
+
+        <h6 class="fw-semibold mb-2">2. Cookies and Session Storage</h6>
+        <p class="text-body-secondary mb-4">
+          This application uses <strong>strictly necessary session cookies</strong> only.
+          These cookies maintain your authenticated login session and, where enabled,
+          your two-factor authentication verification state. They are not used for
+          tracking, advertising, or any purpose beyond secure session management.
+          A separate <code>localStorage</code> key (<code>theme</code>) stores your
+          light / dark mode preference, and <code>cookie_consent</code> records your
+          acknowledgement of this notice. Neither value is transmitted to any server.
+        </p>
+
+        <h6 class="fw-semibold mb-2">3. Data Storage</h6>
+        <p class="text-body-secondary mb-4">
+          All data is stored in SQLite database files on the server that hosts this
+          application. No data is transmitted to third-party services. You are solely
+          responsible for the security of your hosting infrastructure.
+        </p>
+
+        <h6 class="fw-semibold mb-2">4. Third-Party Requests</h6>
+        <p class="text-body-secondary mb-4">
+          When you add a bookmark and leave the title or description blank, the server
+          makes a one-time HTTP request to the target URL to scrape page metadata
+          (title and description). This request originates from the server, not your
+          browser. No data from that request is shared with any third party.
+          Bootstrap CSS, Bootstrap Icons, and Bootstrap JavaScript are loaded from
+          the jsDelivr CDN at page load time.
+        </p>
+
+        <h6 class="fw-semibold mb-2">5. Data Retention and Deletion</h6>
+        <p class="text-body-secondary mb-4">
+          Your data persists for as long as your account exists on this installation.
+          You may delete individual bookmarks at any time from the dashboard.
+          You may also permanently delete your account and all associated data
+          yourself at any time using the <strong>Delete Account</strong> option in
+          the Danger Zone panel on the dashboard. This action is immediate and
+          irreversible — no administrator intervention is required.
+        </p>
+
+        <h6 class="fw-semibold mb-2">6. Contact</h6>
+        <p class="text-body-secondary mb-0">
+          For questions about this privacy policy, please contact the administrator
+          of the server on which this application is hosted.
+        </p>
+
+      </div>
+    </div>
+
+    <div class="text-center mt-3">
+      <a href="{{ url_for('bookmarks.dashboard') if current_user.is_authenticated else url_for('auth.login') }}"
+         class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Back
+      </a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

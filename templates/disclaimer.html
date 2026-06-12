@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+{% block title %}Disclaimer – Sandbox99 Bookmark{% endblock %}
+
+{% block content %}
+<div class="col-md-8 mx-auto my-5">
+
+  <div class="card shadow border-0">
+
+    <!-- Card header -->
+    <div class="card-header bg-dark text-white py-3">
+      <h5 class="mb-0 fw-bold">
+        <i class="bi bi-exclamation-triangle-fill me-2 text-warning"></i>
+        Critical Security Notice: Self-Custody &amp; Data Portability
+      </h5>
+    </div>
+
+    <div class="card-body p-4 p-md-5">
+
+      <p class="text-body-secondary small mb-5">
+        Last updated: June 2026. Please read the following notices carefully before
+        using this application.
+      </p>
+
+      <!-- ================================================================
+           Section 1 — No Remote Recovery Options
+           ================================================================ -->
+      <h6 class="fw-bold text-danger mb-3">
+        <i class="bi bi-shield-exclamation me-2"></i>
+        1. No Remote Recovery Options — Self-Custody Container Model
+      </h6>
+
+      <p class="text-body-secondary mb-3">
+        Sandbox99 Bookmark is built on an intentional <strong>self-custody,
+        zero-trust architecture</strong>. It runs entirely within a private, locally
+        hosted Docker container with no outbound connections to any external
+        authentication service, email relay, SMS gateway, or cloud recovery system.
+        This design choice means that <strong>all credentials and authentication
+        state are the sole responsibility of the user</strong>.
+      </p>
+
+      <p class="text-body-secondary mb-3">
+        <strong>There is no password reset mechanism of any kind.</strong> No
+        "Forgot Password" link exists, no recovery email will be sent, and no
+        administrator back-channel is available for remote identity verification.
+        If you forget your password, the only remediation path is direct
+        intervention in the SQLite database by whoever administers the host server.
+        This is an explicit design constraint, not a missing feature.
+      </p>
+
+      <p class="text-body-secondary mb-5">
+        <strong>There is no two-factor authentication (2FA) bypass or recovery
+        code system.</strong> Once TOTP-based 2FA is enabled on your account, a
+        valid token from your registered authenticator application is required at
+        every login. If you lose access to that authenticator — whether through
+        device loss, application deletion, or failure to back up the secret — your
+        account becomes permanently inaccessible at the application layer. The only
+        resolution is database-level removal of the stored 2FA secret by the server
+        administrator. The absence of a bypass is itself a deliberate security
+        property. You are strongly advised to securely back up your TOTP secret
+        or authenticator configuration before enabling 2FA.
+      </p>
+
+      <hr class="my-4">
+
+      <!-- ================================================================
+           Section 2 — Backup Strategy & Restoration
+           ================================================================ -->
+      <h6 class="fw-bold text-warning mb-3">
+        <i class="bi bi-database-down-fill me-2"></i>
+        2. Your Backup Strategy &amp; Restoration Plan
+      </h6>
+
+      <div class="alert alert-info border border-info-subtle" role="alert">
+        <h6 class="alert-heading fw-bold mb-3">
+          <i class="bi bi-info-circle-fill me-2"></i>
+          Data Portability Notice — Regular Exports Are Essential
+        </h6>
+
+        <p class="mb-3">
+          Because this application has <strong>no cloud synchronisation, no remote
+          backup service, and no cross-account data migration utility</strong>, your
+          entire bookmark collection exists only in the SQLite database file on the
+          server that hosts this container. There is no off-site redundancy unless
+          you create it yourself.
+        </p>
+
+        <p class="mb-3">
+          If the host server is lost, rebuilt, or wiped — or if your account is
+          ever deleted and needs to be re-initialised — <strong>any bookmarks that
+          have not been exported will be permanently and unrecoverably lost</strong>.
+          There is no undo and no support channel that can restore them.
+        </p>
+
+        <p class="mb-3">
+          The application includes a built-in <strong>Netscape HTML export
+          utility</strong> located in the <em>Data Portability</em> panel on the
+          dashboard sidebar. This utility produces a standards-compliant
+          <code>.html</code> bookmark file that is universally recognised and
+          importable by every major browser — Chrome, Firefox, Safari, and Edge —
+          as well as any future installation of this application. The entire process
+          takes seconds.
+        </p>
+
+        <p class="mb-3">
+          <strong>Recommended practice:</strong> schedule a weekly or monthly
+          export and store the resulting file in a separate, trusted location
+          outside the host server — such as an encrypted external drive, a local
+          network share, or a personal encrypted cloud storage account. Treat this
+          file with the same diligence you would apply to any other critical
+          personal data backup.
+        </p>
+
+        <p class="mb-0">
+          In the event that a new account must be initialised, the previously
+          exported <code>.html</code> file can be re-imported in its entirety via
+          the same <em>Data Portability</em> panel, restoring your full bookmark
+          collection — including folder structure and tags — within a single
+          operation.
+        </p>
+      </div>
+
+      <hr class="my-4">
+
+      <!-- ================================================================
+           Section 3 — General Disclaimers
+           ================================================================ -->
+      <h6 class="fw-bold mb-3">3. General Disclaimers</h6>
+
+      <p class="text-body-secondary mb-3">
+        <strong>No warranty.</strong> This software is provided <em>"as is"</em>,
+        without warranty of any kind, express or implied. The authors make no
+        representations or warranties regarding the accuracy, completeness,
+        reliability, or fitness for a particular purpose of this application.
+      </p>
+
+      <p class="text-body-secondary mb-3">
+        <strong>Deployment responsibility.</strong> You are solely responsible for
+        running this application in a secure environment — including keeping host
+        operating system and container images up to date, enforcing HTTPS
+        termination, restricting network access to trusted clients, rotating the
+        <code>SECRET_KEY</code> environment variable regularly, and protecting the
+        underlying SQLite database files from unauthorised access.
+      </p>
+
+      <p class="text-body-secondary mb-3">
+        <strong>External links.</strong> Bookmarks saved in this application may
+        point to external websites. The authors have no control over the content,
+        availability, or security of those external resources and accept no
+        responsibility for them.
+      </p>
+
+      <p class="text-body-secondary mb-0">
+        <strong>Limitation of liability.</strong> In no event shall the authors or
+        contributors be liable for any direct, indirect, incidental, special, or
+        consequential damages arising out of the use of — or inability to use —
+        this application, including but not limited to loss of bookmark data, loss
+        of account access, or security incidents resulting from deployment
+        misconfiguration.
+      </p>
+
+    </div><!-- /card-body -->
+
+    <!-- Card footer — navigation -->
+    <div class="card-footer bg-transparent border-top text-center py-3">
+      <a href="{{ url_for('bookmarks.dashboard') if current_user.is_authenticated else url_for('auth.login') }}"
+         class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Back
+      </a>
+    </div>
+
+  </div><!-- /card -->
+
+</div><!-- /col -->
+{% endblock %}

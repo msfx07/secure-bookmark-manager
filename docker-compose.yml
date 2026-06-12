@@ -1,0 +1,15 @@
+services:
+  web_app:
+    build: .
+    image: secure-bookmark-manager:${IMAGE_TAG:-local}
+    container_name: bookmark-manager
+    ports:
+      - "5000:5000"
+    volumes:
+      - bookmark_data:/app/data
+    env_file:
+      - .env
+    restart: unless-stopped
+
+volumes:
+  bookmark_data:

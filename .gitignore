@@ -1,0 +1,31 @@
+# Environment & secrets
+.env
+.env.*
+
+# SQLite databases (persisted via Docker volume)
+data/
+*.db
+*.sqlite3
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# OS & editor noise
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*~
+
+# Local notes and prompt skills
+claude.md
+skills/
+.claude

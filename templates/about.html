@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}About – Sandbox99 Bookmark{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-4">
+  <div class="col-lg-7 col-md-9">
+
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-dark text-white fw-semibold py-2">
+        <i class="bi bi-info-circle me-2"></i>About
+      </div>
+      <div class="card-body p-4">
+
+        <h5 class="fw-semibold mb-3">Sandbox99 Bookmark</h5>
+        <p class="text-body-secondary">
+          Sandbox99 Bookmark is a self-hosted, privacy-focused web application
+          that lets you save, organise, and retrieve your bookmarks from any device
+          without relying on third-party cloud services.
+        </p>
+
+        <hr class="my-4">
+
+        <h6 class="fw-semibold mb-2">Key Features</h6>
+        <ul class="text-body-secondary mb-4">
+          <li class="mb-1">End-to-end authentication with bcrypt password hashing</li>
+          <li class="mb-1">Optional TOTP two-factor authentication (2FA)</li>
+          <li class="mb-1">Automatic page metadata scraping on bookmark creation</li>
+          <li class="mb-1">Folder and tag organisation with full-text search</li>
+          <li class="mb-1">Netscape HTML export and import for cross-browser portability</li>
+          <li class="mb-1">Bootstrap 5.3 responsive UI with native light / dark mode</li>
+          <li>Bookmark lifecycle timestamps (created, last modified, and last accessed)</li>
+        </ul>
+
+        <h6 class="fw-semibold mb-2">Technology Stack</h6>
+        <ul class="text-body-secondary mb-4">
+          <li class="mb-1">Backend: Python 3.11 / Flask 3.1 / Gunicorn</li>
+          <li class="mb-1">Database: SQLite3 (file-backed, no external server required)</li>
+          <li class="mb-1">Container: Docker + Docker Compose</li>
+          <li>Frontend: Bootstrap 5.3 CDN with Bootstrap Icons</li>
+        </ul>
+
+        <hr class="my-4">
+
+        <h6 class="fw-semibold mb-3">Built With</h6>
+
+        <div class="d-flex flex-column gap-3 mb-4">
+
+          <div class="d-flex gap-3 align-items-start">
+            <div class="flex-shrink-0 text-center" style="width:2rem;">
+              <i class="bi bi-person-workspace fs-5 text-warning"></i>
+            </div>
+            <div>
+              <p class="fw-semibold mb-0">Jose C. Mendez</p>
+              <p class="text-body-secondary small mb-1">Project Architect &amp; Developer</p>
+              <p class="text-body-secondary small mb-0">
+                Directed the vision, structure, and decisions throughout.
+                Built using Claude AI + Google Gemini as AI pair programmers.
+              </p>
+            </div>
+          </div>
+
+          <div class="d-flex gap-3 align-items-start">
+            <div class="flex-shrink-0 text-center" style="width:2rem;">
+              <i class="bi bi-cpu fs-5 text-info"></i>
+            </div>
+            <div>
+              <p class="fw-semibold mb-0">Claude AI <span class="text-body-secondary fw-normal">(Anthropic)</span></p>
+              <p class="text-body-secondary small mb-0">
+                Code generation, project scaffolding, and workflow automation
+                via CLAUDE.md persistent context and reusable Skills.
+              </p>
+            </div>
+          </div>
+
+          <div class="d-flex gap-3 align-items-start">
+            <div class="flex-shrink-0 text-center" style="width:2rem;">
+              <i class="bi bi-stars fs-5 text-primary"></i>
+            </div>
+            <div>
+              <p class="fw-semibold mb-0">Google Gemini</p>
+              <p class="text-body-secondary small mb-0">
+                Research assistance, content coaching, and language support.
+              </p>
+            </div>
+          </div>
+
+        </div>
+
+        <p class="text-body-secondary small mb-0">
+          This application is intended for personal or small-team use on a trusted,
+          privately hosted server. All data remains on your own infrastructure.
+        </p>
+
+      </div>
+    </div>
+
+    <div class="text-center mt-3">
+      <a href="{{ url_for('bookmarks.dashboard') if current_user.is_authenticated else url_for('auth.login') }}"
+         class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Back
+      </a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

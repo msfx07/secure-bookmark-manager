@@ -1,0 +1,55 @@
+/* Smooth card hover lift */
+.bookmark-card {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.bookmark-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.12) !important;
+}
+
+/* Sidebar active state uses Bootstrap primary blue already;
+   add a left accent bar for extra clarity */
+.list-group-item.active {
+  border-left: 3px solid #fff;
+}
+
+/* Truncate long URLs gracefully in cards */
+.card .text-truncate {
+  max-width: 100%;
+}
+
+/* Navbar brand spacing */
+.navbar-brand {
+  letter-spacing: 0.02em;
+}
+
+/* Slightly tighter badge text */
+.badge {
+  font-weight: 500;
+}
+
+/* Clamp scraped/user descriptions to 2 lines on bookmark cards */
+.description-clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Custom Interactive Utility Styles */
+.bookmark-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Float effect on mouse over */
+.bookmark-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+/* Smooth transition for the Open menu button group */
+.open-btn-group {
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+    opacity: 1;
+    visibility: visible;
+}
