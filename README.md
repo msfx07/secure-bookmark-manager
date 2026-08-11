@@ -106,50 +106,6 @@ http://localhost:5000
 
 ---
 
-### Option B: Manual Deployment
-
-**1. Clone the repository**
-
-```bash
-git clone https://github.com/msfx07/secure-bookmark-manager.git
-cd secure-bookmark-manager
-```
-
-**2. Configure environment variables**
-
-Create a `.env` file in the project root:
-
-```env
-SECRET_KEY=replace_this_with_a_long_random_string
-BOOKMARK_DB_PATH=/app/data/bookmarks.db
-FLASK_DEBUG=false
-```
-
-> **Important:** Use a long, random value for `SECRET_KEY`. Never commit this file — it is already git-ignored.
-
-**3. Build and run**
-
-```bash
-docker compose up --build -d
-```
-
-**4. Open in your browser**
-
-```
-http://localhost:5000
-```
-
-**5. Log in with default credentials**
-
-| Field | Value |
-|-------|-------|
-| Username | `admin` |
-| Password | `Secure-Bookmark-Manager` |
-
-> ⚠️ **Important:** Change the default password immediately after first login!
-
----
-
 ## Default Credentials
 
 A default admin account is created automatically on first run:
@@ -211,6 +167,7 @@ docker compose down -v
 secure-bookmark-manager/
 ├── Dockerfile
 ├── docker-compose.yml
+├── docker-compose.dev.yml
 ├── requirements.txt
 ├── deploy.sh                 # Automated deployment script (recommended)
 ├── app.py                    # App factory, LoginManager, DB init, blueprint registration
@@ -278,22 +235,6 @@ chmod +x deploy.sh
 4. **Builds containers** — Runs `docker compose up --build -d`
 5. **Verifies deployment** — Checks if the application is responding on port 5000
 
-### Manual Environment Setup
-
-If you prefer to configure manually, create a `.env` file:
-
-```env
-SECRET_KEY=your_random_secret_key_here
-BOOKMARK_DB_PATH=/app/data/bookmarks.db
-FLASK_DEBUG=false
-```
-
-Generate a secure key with:
-```bash
-python3 -c "import secrets; print(secrets.token_hex(32))"
-```
-
----
 
 ## Seed Demo Users
 
