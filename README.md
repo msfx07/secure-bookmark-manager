@@ -25,7 +25,9 @@ A self-hosted, containerised bookmark manager built with Flask. Organise URLs in
 
 ## Features
 
-- **User authentication** — register, login, and logout with Werkzeug-hashed passwords and HIBP breach checking
+- **User authentication** — login with default admin credentials (admin / Secure-Bookmark-Manager)
+- **User management** — admin-only CRUD interface for managing user accounts
+- **Role-based access control** — single admin account with regular user roles
 - **Two-factor authentication** — optional TOTP via Google Authenticator, Authy, or any compatible app
 - **Bookmark CRUD** — add, edit, and delete bookmarks with title, URL, category, tags, and auto-scraped metadata
 - **Category organisation** — flat single-level categories with custom emoji icons per category
@@ -34,7 +36,7 @@ A self-hosted, containerised bookmark manager built with Flask. Organise URLs in
 - **Full-text search** — search by title, URL, category, or tags in a single query
 - **Link validation** — async background health checker flags broken or unreachable URLs
 - **Data portability** — export and import bookmarks as standard Netscape HTML bookmark files
-- **Dual SQLite databases** — `auth.db` for credentials, `bookmarks.db` for content; persisted via a named Docker volume
+- **Consolidated SQLite database** — single `bookmarks.db` for users, bookmarks, and categories; persisted via a named Docker volume
 - **Bootstrap 5 UI** — responsive two-column dashboard, dark mode toggle, accordion sidebar settings panel
 
 ---
@@ -45,7 +47,7 @@ A self-hosted, containerised bookmark manager built with Flask. Organise URLs in
 |---|---|
 | Backend | Python 3.11, Flask 3.1.1, Flask-Login 0.6.3 |
 | Security | Werkzeug password hashing, PyOTP (TOTP), HIBP breach API |
-| Database | SQLite3 (dual-database architecture) |
+| Database | SQLite3 (consolidated database) |
 | Frontend | Jinja2 templates, Bootstrap 5.3.2, Bootstrap Icons 1.11.3 |
 | Server | Gunicorn 23 |
 | Container | Docker, Docker Compose |
@@ -93,7 +95,45 @@ docker compose up --build -d
 http://localhost:5000
 ```
 
-> **Account Access Notice:** This application does not include a default admin account or preconfigured login credentials. For security reasons, each user must create an account through the registration page before signing in.
+**5. Log in with default credentials**
+
+| Field | Value |
+|-------|-------|
+| Username | `admin` |
+| Password | `Secure-Bookmark-Manager` |
+
+> ⚠️ **Important:** Change the default password immediately after first login!
+
+---
+
+## Default Credentials
+
+A default admin account is created automatically on first run:
+
+| Username | Password |
+|----------|----------|
+| `admin` | `Secure-Bookmark-Manager` |
+
+> **Security Note:** Public registration has been removed. Only administrators can create new user accounts. Change the default password immediately after first login!
+
+---
+
+## User Management
+
+Administrators can manage user accounts through the admin panel:
+
+1. Log in with admin credentials
+2. Click the **Users** button in the navigation bar
+3. Use the interface to create, edit, or delete user accounts
+
+### User Roles
+
+| Role | Description |
+|------|-------------|
+| **Admin** | Full access to all features including user management |
+| **User** | Standard access to bookmarks and personal settings |
+
+> **Note:** Only the main admin account (username: `admin`) has admin privileges. New users are created with the regular user role and cannot be promoted to admin.
 
 ---
 
@@ -101,8 +141,9 @@ http://localhost:5000
 
 | Variable | Description | Default |
 |---|---|---|
-| `SECRET_KEY` | Flask session signing key — **change before deploying** | `dev_fallback_secret` |
-| `FLASK_ENV` | Flask environment (`production` or `development`) | `production` |
+| `SECRET_KEY` | Flask session signing key — **change before deploying** | Auto-generated |
+| `BOOKMARK_DB_PATH` | Path to SQLite database | `/app/data/bookmarks.db` |
+| `FLASK_DEBUG` | Enable debug mode (`true`/`false`) | `false` |
 
 ---
 
@@ -120,18 +161,6 @@ docker compose down -v
 
 ---
 
-## Factory Reset
-
-A host-only reset script is included for wiping all users and bookmarks:
-
-```bash
-sudo ./reset_factory.sh
-```
-
-This stops the container, removes both databases from the Docker volume, and restarts the application. It requires `sudo` and is excluded from the Docker image via `.dockerignore`.
-
----
-
 ## Project Structure
 
 ```
@@ -140,7 +169,6 @@ secure-bookmark-manager/
 ├── docker-compose.yml
 ├── requirements.txt
 ├── app.py                    # App factory, LoginManager, DB init, blueprint registration
-├── reset_factory.sh          # Host-only factory reset (not in Docker image)
 ├── .dockerignore
 ├── .env                      # Local secrets (git-ignored)
 ├── data/                     # Local mirror of Docker volume (git-ignored)
@@ -149,20 +177,24 @@ secure-bookmark-manager/
 │   └── bookmark_db.py        # Bookmark CRUD, category list/rename/emoji, search, validation
 ├── routes/
 │   ├── auth.py               # Register, login, logout, 2FA setup/verify/disable, change-password, delete-account
-│   └── bookmarks.py          # Dashboard, CRUD, export, import, bulk-delete, category icon, link validate
+│   ├── bookmarks.py          # Dashboard, CRUD, export, import, bulk-delete, category icon, link validate
+│   └── admin.py              # User management (admin only)
 ├── services/
 │   └── validator.py          # Async link health checker — background daemon + per-user trigger
 ├── templates/
 │   ├── base.html             # Bootstrap layout, navbar, dark mode, flash messages, footer
 │   ├── login.html
-│   ├── register.html
 │   ├── dashboard.html        # Two-column layout, category sidebar, bookmark grid, bulk select
 │   ├── edit.html
 │   ├── about.html
 │   ├── privacy.html
 │   ├── disclaimer.html
 │   ├── 2fa_setup.html        # QR code + manual key + confirmation form
-│   └── 2fa_verify.html       # Login checkpoint
+│   ├── 2fa_verify.html       # Login checkpoint
+│   └── admin/
+│       ├── users.html        # User list (admin only)
+│       ├── create_user.html  # Create user form (admin only)
+│       └── edit_user.html    # Edit user form (admin only)
 └── static/
     └── css/custom.css
 ```
@@ -171,13 +203,20 @@ secure-bookmark-manager/
 
 ## Two-Factor Authentication
 
-2FA is optional and per-user. To enable it:
+2FA is **disabled by default** but fully optional. Users can enable it from their account settings.
+
+### Enabling 2FA
 
 1. Log in and open the **Security Setup** panel in the dashboard sidebar.
 2. Click **Enable 2FA** and scan the QR code with your authenticator app.
 3. Enter the 6-digit code to confirm — 2FA is now active.
 
-On every subsequent login you will be prompted for a TOTP code before reaching the dashboard. To disable, click **Disable 2FA** in the same sidebar panel.
+### Disabling 2FA
+
+1. Open the **Security Setup** panel in the dashboard sidebar.
+2. Click **Disable 2FA** and enter your current TOTP code to confirm.
+
+> **Note:** 2FA is per-user and optional. Each user decides whether to enable it for their account.
 
 ---
 

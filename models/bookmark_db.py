@@ -10,6 +10,7 @@ def _get_conn():
 
 
 def init_bookmark_db():
+    """Initialize bookmarks and category_meta tables in the consolidated database."""
     conn = _get_conn()
     try:
         conn.execute("""

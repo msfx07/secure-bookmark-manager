@@ -12,7 +12,7 @@ from flask import (
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash, generate_password_hash
 from models.auth_db import (
-    register_user, verify_user,
+    verify_user, create_default_admin,
     save_2fa_secret, clear_2fa_secret, verify_totp,
     update_password_hash, delete_user_account,
 )
@@ -90,58 +90,8 @@ def enforce_2fa_checkpoint():
 
 
 # ---------------------------------------------------------------------------
-# Register / Login / Logout
+# Login / Logout
 # ---------------------------------------------------------------------------
-
-@auth.route("/register", methods=["GET", "POST"])
-def register():
-    if current_user.is_authenticated:
-        return redirect(url_for("bookmarks.dashboard"))
-
-    if request.method == "POST":
-        username = request.form.get("username", "").lower().strip()
-        password = request.form.get("password", "")
-        confirm  = request.form.get("confirm_password", "")
-
-        if not username or not password:
-            flash("Username and password are required.", "danger")
-            return redirect(url_for("auth.register"))
-
-        # --- Username rules ---
-        if " " in username:
-            flash("Username cannot contain spaces.", "danger")
-            return redirect(url_for("auth.register"))
-
-        # --- Password rules ---
-        if not (14 <= len(password) <= 64):
-            flash("Password must be between 14 and 64 characters long.", "danger")
-            return redirect(url_for("auth.register"))
-        if " " in password:
-            flash("Password must not contain spaces.", "danger")
-            return redirect(url_for("auth.register"))
-
-        # --- Breach check ---
-        if _is_password_breached(password):
-            flash(
-                "This password has been found in a public data breach and is unsafe "
-                "to use. Please choose a different passphrase.",
-                "danger",
-            )
-            return redirect(url_for("auth.register"))
-
-        if password != confirm:
-            flash("Passwords do not match.", "danger")
-            return redirect(url_for("auth.register"))
-
-        if register_user(username, password):
-            flash("Account created. Please log in.", "success")
-            return redirect(url_for("auth.login"))
-
-        flash("That username is already taken.", "danger")
-        return redirect(url_for("auth.register"))
-
-    return render_template("register.html")
-
 
 @auth.route("/login", methods=["GET", "POST"])
 def login():

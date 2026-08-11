@@ -3,7 +3,7 @@ import pyotp
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
-DB_PATH = "/app/data/auth.db"
+DB_PATH = "/app/data/bookmarks.db"
 
 
 def _get_conn():
@@ -13,6 +13,7 @@ def _get_conn():
 
 
 def init_auth_db():
+    """Initialize the users table in the consolidated bookmarks.db database."""
     conn = _get_conn()
     try:
         conn.execute("""
@@ -20,33 +21,49 @@ def init_auth_db():
                 id                INTEGER   PRIMARY KEY AUTOINCREMENT,
                 username          TEXT      UNIQUE NOT NULL,
                 password_hash     TEXT      NOT NULL,
+                role              TEXT      NOT NULL DEFAULT 'user',
                 two_factor_secret TEXT      DEFAULT NULL,
                 created_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
         conn.commit()
-        # Migrate existing installs: add column if absent (OperationalError = already exists)
+        # Migrate existing installs: add columns if absent (OperationalError = already exists)
+        migrations = [
+            ("two_factor_secret", "TEXT DEFAULT NULL"),
+            ("role", "TEXT NOT NULL DEFAULT 'user'"),
+        ]
+        for col, defn in migrations:
+            try:
+                conn.execute(f"ALTER TABLE users ADD COLUMN {col} {defn}")
+                conn.commit()
+            except sqlite3.OperationalError:
+                pass
+        
+        # Ensure the admin user has admin role (migration fix for existing installs)
         try:
-            conn.execute(
-                "ALTER TABLE users ADD COLUMN two_factor_secret TEXT DEFAULT NULL"
-            )
+            conn.execute("UPDATE users SET role = 'admin' WHERE username = 'admin'")
             conn.commit()
-        except sqlite3.OperationalError:
+        except Exception:
             pass
     finally:
         conn.close()
 
 
 class User(UserMixin):
-    def __init__(self, id, username, password_hash, two_factor_secret=None):
+    def __init__(self, id, username, password_hash, role="user", two_factor_secret=None):
         self.id = id
         self.username = username
         self.password_hash = password_hash
+        self.role = role
         self.two_factor_secret = two_factor_secret
 
     @property
     def has_2fa(self):
         return bool(self.two_factor_secret)
+
+    @property
+    def is_admin(self):
+        return self.role == "admin"
 
     @staticmethod
     def _from_row(row):
@@ -56,6 +73,7 @@ class User(UserMixin):
             row["id"],
             row["username"],
             row["password_hash"],
+            row["role"],
             row["two_factor_secret"],
         )
 
@@ -96,6 +114,29 @@ def register_user(username, password):
         return False
     finally:
         conn.close()
+
+
+def create_default_admin():
+    """Create the default admin user if no users exist."""
+    conn = _get_conn()
+    try:
+        # Check if any users exist
+        row = conn.execute("SELECT COUNT(*) as count FROM users").fetchone()
+        if row["count"] == 0:
+            # Create default admin user
+            try:
+                conn.execute(
+                    "INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)",
+                    ("admin", generate_password_hash("Secure-Bookmark-Manager"), "admin"),
+                )
+                conn.commit()
+                return True
+            except sqlite3.IntegrityError:
+                # User already exists (race condition)
+                return False
+    finally:
+        conn.close()
+    return False
 
 
 def verify_user(username, password):
@@ -154,5 +195,93 @@ def delete_user_account(user_id):
     try:
         conn.execute("DELETE FROM users WHERE id = ?", (user_id,))
         conn.commit()
+    finally:
+        conn.close()
+
+
+# ---------------------------------------------------------------------------
+# User Management (Admin only)
+# ---------------------------------------------------------------------------
+
+def get_all_users():
+    """Return all users as a list of dictionaries."""
+    conn = _get_conn()
+    try:
+        rows = conn.execute("SELECT * FROM users ORDER BY created_at DESC").fetchall()
+        return [dict(row) for row in rows]
+    finally:
+        conn.close()
+
+
+def get_user_by_id(user_id):
+    """Return a single user as a dictionary, or None."""
+    conn = _get_conn()
+    try:
+        row = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+        return dict(row) if row else None
+    finally:
+        conn.close()
+
+
+def create_user(username, password, role="user"):
+    """Create a new user. Returns True on success, False if username taken."""
+    conn = _get_conn()
+    try:
+        conn.execute(
+            "INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)",
+            (username, generate_password_hash(password), role),
+        )
+        conn.commit()
+        return True
+    except sqlite3.IntegrityError:
+        return False
+    finally:
+        conn.close()
+
+
+def update_user(user_id, username=None, password=None, role=None):
+    """Update user fields. Only provided (non-None) fields are updated."""
+    conn = _get_conn()
+    try:
+        updates = []
+        params = []
+        if username is not None:
+            updates.append("username = ?")
+            params.append(username)
+        if password is not None:
+            updates.append("password_hash = ?")
+            params.append(generate_password_hash(password))
+        if role is not None:
+            updates.append("role = ?")
+            params.append(role)
+        if not updates:
+            return False
+        params.append(user_id)
+        conn.execute(f"UPDATE users SET {', '.join(updates)} WHERE id = ?", params)
+        conn.commit()
+        return True
+    except sqlite3.IntegrityError:
+        return False
+    finally:
+        conn.close()
+
+
+def delete_user(user_id):
+    """Delete a user by ID."""
+    conn = _get_conn()
+    try:
+        conn.execute("DELETE FROM users WHERE id = ?", (user_id,))
+        conn.commit()
+        return True
+    finally:
+        conn.close()
+
+
+def count_users():
+    """Return the total number of users."""
+    conn = _get_conn()
+    try:
+        row = conn.execute("SELECT COUNT(*) as count FROM users").fetchone()
+        return row["count"]
     finally:
         conn.close()

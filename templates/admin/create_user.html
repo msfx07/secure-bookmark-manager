@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Create User — Admin{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6 col-lg-5">
+    <div class="card shadow-sm">
+      <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">
+          <i class="bi bi-person-plus me-2"></i>Create New User
+        </h5>
+      </div>
+      <div class="card-body">
+        <form method="POST" action="{{ url_for('admin.create_user_view') }}">
+          <div class="mb-3">
+            <label for="username" class="form-label">Username</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-person"></i></span>
+              <input type="text" class="form-control" id="username" name="username"
+                     value="{{ username if username else '' }}"
+                     placeholder="Enter username" required minlength="3" maxlength="50">
+            </div>
+            <div class="form-text">At least 3 characters, no spaces allowed.</div>
+          </div>
+
+          <div class="mb-3">
+            <label for="password" class="form-label">Password</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-lock"></i></span>
+              <input type="password" class="form-control" id="password" name="password"
+                     placeholder="Enter password" required minlength="8" maxlength="128">
+              <button type="button" class="btn btn-outline-secondary" id="togglePassword"
+                      tabindex="-1" aria-label="Toggle password visibility">
+                <i class="bi bi-eye"></i>
+              </button>
+            </div>
+            <div class="form-text">At least 8 characters.</div>
+          </div>
+
+          <div class="mb-4">
+            <label for="confirm_password" class="form-label">Confirm Password</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+              <input type="password" class="form-control" id="confirm_password" name="confirm_password"
+                     placeholder="Confirm password" required minlength="8" maxlength="128">
+            </div>
+          </div>
+
+          <div class="alert alert-info small">
+            <i class="bi bi-info-circle me-1"></i>
+            New users are created with <strong>User</strong> role by default.
+            Admin role is reserved for the main admin account only.
+          </div>
+
+          <div class="d-flex gap-2">
+            <a href="{{ url_for('admin.list_users') }}" class="btn btn-secondary flex-fill">
+              <i class="bi bi-arrow-left me-1"></i>Cancel
+            </a>
+            <button type="submit" class="btn btn-primary flex-fill">
+              <i class="bi bi-person-plus me-1"></i>Create User
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById('togglePassword').addEventListener('click', function() {
+  const password = document.getElementById('password');
+  const icon = this.querySelector('i');
+  if (password.type === 'password') {
+    password.type = 'text';
+    icon.classList.replace('bi-eye', 'bi-eye-slash');
+  } else {
+    password.type = 'password';
+    icon.classList.replace('bi-eye-slash', 'bi-eye');
+  }
+});
+</script>
+{% endblock %}

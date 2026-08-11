@@ -40,6 +40,12 @@
       </button>
 
       {% if current_user.is_authenticated %}
+        {% if current_user.role == 'admin' %}
+        <a href="{{ url_for('admin.list_users') }}" class="btn btn-outline-warning btn-sm"
+           title="User Management">
+          <i class="bi bi-people-fill me-1"></i>Users
+        </a>
+        {% endif %}
         <span class="navbar-text text-white-50 small">
           <i class="bi bi-person-circle me-1"></i>{{ current_user.username }}
         </span>
@@ -48,7 +54,6 @@
         </a>
       {% else %}
         <a href="{{ url_for('auth.login') }}" class="btn btn-outline-light btn-sm">Login</a>
-        <a href="{{ url_for('auth.register') }}" class="btn btn-warning btn-sm fw-semibold">Register</a>
       {% endif %}
     </div>
   </div>

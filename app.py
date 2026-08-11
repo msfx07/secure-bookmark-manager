@@ -2,7 +2,7 @@ import os
 from urllib.parse import urlparse
 from flask import Flask
 from flask_login import LoginManager
-from models.auth_db import init_auth_db, User
+from models.auth_db import init_auth_db, create_default_admin, User
 from models.bookmark_db import init_bookmark_db
 from services.validator import start_background_validator
 
@@ -43,6 +43,9 @@ def load_user(user_id):
 def initialize_databases():
     init_auth_db()
     init_bookmark_db()
+    # Create default admin user if no users exist
+    if create_default_admin():
+        print("[INFO] Default admin user created: admin / Secure-Bookmark-Manager")
 
 
 with app.app_context():
@@ -50,9 +53,11 @@ with app.app_context():
 
 from routes.auth import auth as auth_bp
 from routes.bookmarks import bookmarks as bookmarks_bp
+from routes.admin import admin as admin_bp
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(bookmarks_bp)
+app.register_blueprint(admin_bp)
 
 start_background_validator()
 
