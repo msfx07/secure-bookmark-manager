@@ -92,14 +92,21 @@ conn.execute("""
         id                INTEGER   PRIMARY KEY AUTOINCREMENT,
         username          TEXT      UNIQUE NOT NULL,
         password_hash     TEXT      NOT NULL,
+        role              TEXT      NOT NULL DEFAULT 'user',
         two_factor_secret TEXT      DEFAULT NULL,
         created_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
 """)
-try:
-    conn.execute("ALTER TABLE users ADD COLUMN two_factor_secret TEXT DEFAULT NULL")
-except sqlite3.OperationalError:
-    pass  # column already exists
+# Migrations — add columns that may be missing from older installs
+_user_migrations = [
+    ("two_factor_secret", "TEXT DEFAULT NULL"),
+    ("role", "TEXT NOT NULL DEFAULT 'user'"),
+]
+for col, defn in _user_migrations:
+    try:
+        conn.execute(f"ALTER TABLE users ADD COLUMN {col} {defn}")
+    except sqlite3.OperationalError:
+        pass
 
 # Bookmarks table
 conn.execute("""

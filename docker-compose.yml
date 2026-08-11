@@ -6,10 +6,7 @@ services:
     ports:
       - "5000:5000"
     volumes:
-      - bookmark_data:/app/data
+      - ./data:/app/data
     env_file:
       - .env
     restart: unless-stopped
-
-volumes:
-  bookmark_data:

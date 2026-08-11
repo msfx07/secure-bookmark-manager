@@ -43,7 +43,7 @@ def load_user(user_id):
 def initialize_databases():
     init_auth_db()
     init_bookmark_db()
-    # Create default admin user if no users exist
+    # Always ensure admin user exists
     if create_default_admin():
         print("[INFO] Default admin user created: admin / Secure-Bookmark-Manager")
 

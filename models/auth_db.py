@@ -117,11 +117,11 @@ def register_user(username, password):
 
 
 def create_default_admin():
-    """Create the default admin user if no users exist."""
+    """Create the default admin user if it doesn't exist."""
     conn = _get_conn()
     try:
-        # Check if any users exist
-        row = conn.execute("SELECT COUNT(*) as count FROM users").fetchone()
+        # Check if admin user exists
+        row = conn.execute("SELECT COUNT(*) as count FROM users WHERE username = 'admin'").fetchone()
         if row["count"] == 0:
             # Create default admin user
             try:
