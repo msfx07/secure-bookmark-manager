@@ -65,6 +65,48 @@ No local Python installation is required.
 
 ## Quick Start
 
+### Option A: Automated Deployment (Recommended)
+
+**1. Clone the repository**
+
+```bash
+git clone https://github.com/msfx07/secure-bookmark-manager.git
+cd secure-bookmark-manager
+```
+
+**2. Run the deploy script**
+
+```bash
+chmod +x deploy.sh
+./deploy.sh
+```
+
+The script will automatically:
+- Check Docker & Docker Compose versions
+- Generate a `.env` file with a random `SECRET_KEY` if it doesn't exist
+- Initialize the SQLite database schema
+- Build and start the containers
+- Verify the application is running
+
+**3. Open in your browser**
+
+```
+http://localhost:5000
+```
+
+**4. Log in with default credentials**
+
+| Field | Value |
+|-------|-------|
+| Username | `admin` |
+| Password | `Secure-Bookmark-Manager` |
+
+> ⚠️ **Important:** Change the default password immediately after first login!
+
+---
+
+### Option B: Manual Deployment
+
 **1. Clone the repository**
 
 ```bash
@@ -77,8 +119,9 @@ cd secure-bookmark-manager
 Create a `.env` file in the project root:
 
 ```env
-FLASK_ENV=production
 SECRET_KEY=replace_this_with_a_long_random_string
+BOOKMARK_DB_PATH=/app/data/bookmarks.db
+FLASK_DEBUG=false
 ```
 
 > **Important:** Use a long, random value for `SECRET_KEY`. Never commit this file — it is already git-ignored.
@@ -168,6 +211,7 @@ secure-bookmark-manager/
 ├── Dockerfile
 ├── docker-compose.yml
 ├── requirements.txt
+├── deploy.sh                 # Automated deployment script (recommended)
 ├── app.py                    # App factory, LoginManager, DB init, blueprint registration
 ├── .dockerignore
 ├── .env                      # Local secrets (git-ignored)
@@ -197,6 +241,55 @@ secure-bookmark-manager/
 │       └── edit_user.html    # Edit user form (admin only)
 └── static/
     └── css/custom.css
+```
+
+---
+
+## Deploy Script
+
+The `deploy.sh` script provides automated deployment with the following features:
+
+### Features
+
+| Feature | Description |
+|---------|-------------|
+| **Docker Check** | Verifies Docker and Docker Compose are installed |
+| **Environment Setup** | Auto-generates `.env` with secure `SECRET_KEY` if missing |
+| **Database Init** | Initializes SQLite schema with all required tables |
+| **Container Build** | Builds and starts Docker containers |
+| **Health Check** | Verifies the application is running correctly |
+
+### Usage
+
+```bash
+# Make the script executable (first time only)
+chmod +x deploy.sh
+
+# Run the deployment
+./deploy.sh
+```
+
+### What the Script Does
+
+1. **Validates prerequisites** — Checks for Docker and Docker Compose
+2. **Creates `.env` file** — Generates a secure random `SECRET_KEY` if `.env` doesn't exist
+3. **Initializes database** — Creates the SQLite schema locally before container startup
+4. **Builds containers** — Runs `docker compose up --build -d`
+5. **Verifies deployment** — Checks if the application is responding on port 5000
+
+### Manual Environment Setup
+
+If you prefer to configure manually, create a `.env` file:
+
+```env
+SECRET_KEY=your_random_secret_key_here
+BOOKMARK_DB_PATH=/app/data/bookmarks.db
+FLASK_DEBUG=false
+```
+
+Generate a secure key with:
+```bash
+python3 -c "import secrets; print(secrets.token_hex(32))"
 ```
 
 ---
