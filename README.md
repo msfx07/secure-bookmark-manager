@@ -26,7 +26,8 @@ A self-hosted, containerised bookmark manager built with Flask. Organise URLs in
 ## Features
 
 - **User authentication** — login with default admin credentials (admin / Secure-Bookmark-Manager)
-- **User management** — admin-only CRUD interface for managing user accounts
+- **User management** — admin-only CRUD interface for creating, editing, and deleting user accounts
+- **No public registration** — only administrators can create new user accounts
 - **Role-based access control** — single admin account with regular user roles
 - **Two-factor authentication** — optional TOTP via Google Authenticator, Authy, or any compatible app
 - **Bookmark CRUD** — add, edit, and delete bookmarks with title, URL, category, tags, and auto-scraped metadata
@@ -220,7 +221,7 @@ secure-bookmark-manager/
 │   ├── auth_db.py            # User model, password hashing, TOTP helpers
 │   └── bookmark_db.py        # Bookmark CRUD, category list/rename/emoji, search, validation
 ├── routes/
-│   ├── auth.py               # Register, login, logout, 2FA setup/verify/disable, change-password, delete-account
+│   ├── auth.py               # Login, logout, 2FA setup/verify/disable, change-password, delete-account
 │   ├── bookmarks.py          # Dashboard, CRUD, export, import, bulk-delete, category icon, link validate
 │   └── admin.py              # User management (admin only)
 ├── services/
