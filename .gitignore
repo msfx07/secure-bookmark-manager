@@ -28,4 +28,7 @@ Thumbs.db
 # Local notes and prompt skills
 claude.md
 skills/
+
+# CodeGraph
+.codegraph/
 .claude

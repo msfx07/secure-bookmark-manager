@@ -294,6 +294,76 @@ python3 -c "import secrets; print(secrets.token_hex(32))"
 
 ---
 
+## Seed Demo Users
+
+The `seed_demo_users.py` script creates 3 demo users with 5 bookmarks each for testing purposes.
+
+### Features
+
+| Feature | Description |
+|---------|-------------|
+| **3 Demo Users** | Creates `alice`, `bob`, and `charlie` with unique passwords |
+| **15 Bookmarks** | Each user gets 5 bookmarks across different categories |
+| **Role Assignment** | All users created with `user` role (not admin) |
+| **Idempotent** | Safe to run multiple times — skips existing users |
+
+### Usage
+
+```bash
+# Run the seed script
+python3 seed_demo_users.py
+```
+
+### Demo Users Created
+
+| Username | Password | Role | Bookmarks |
+|----------|----------|------|-----------|
+| `alice` | `AliceSecure123!` | user | 5 |
+| `bob` | `BobSecure456!` | user | 5 |
+| `charlie` | `CharlieSecure789!` | user | 5 |
+
+### Sample Bookmarks per User
+
+| User | Categories |
+|------|------------|
+| **alice** | Work, Learning, Entertainment, Shopping, Health |
+| **bob** | Work, Learning, Entertainment, Shopping, Health |
+| **charlie** | Work, Learning, Entertainment, Shopping, Health |
+
+### Example Output
+
+```
+============================================================
+  DEMO USER SEED SCRIPT
+  Creates 3 users with 5 bookmarks each
+============================================================
+
+👤 Creating user: alice
+  ✓ Created 5 bookmarks in 5 categories
+
+👤 Creating user: bob
+  ✓ Created 5 bookmarks in 5 categories
+
+👤 Creating user: charlie
+  ✓ Created 5 bookmarks in 5 categories
+
+============================================================
+  SUMMARY REPORT
+============================================================
+
+Username        Password                  User ID    Bookmarks
+------------------------------------------------------------
+alice           AliceSecure123!           2          5
+bob             BobSecure456!             3          5
+charlie         CharlieSecure789!         4          5
+------------------------------------------------------------
+
+✅ Total users created: 3
+✅ Total bookmarks created: 15
+```
+
+---
+
 ## Two-Factor Authentication
 
 2FA is **disabled by default** but fully optional. Users can enable it from their account settings.
