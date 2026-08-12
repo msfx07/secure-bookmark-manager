@@ -49,8 +49,12 @@ def create_user_view():
             errors.append("Username cannot contain spaces.")
         if not password:
             errors.append("Password is required.")
-        if len(password) < 8:
-            errors.append("Password must be at least 8 characters long.")
+        if len(password) < 14:
+            errors.append("Password must be at least 14 characters long.")
+        if len(password) > 64:
+            errors.append("Password must be at most 64 characters long.")
+        if " " in password:
+            errors.append("Password must not contain spaces.")
         if password != confirm_password:
             errors.append("Passwords do not match.")
 
@@ -97,8 +101,12 @@ def edit_user(user_id):
             errors.append("Username must be at least 3 characters long.")
         if " " in username:
             errors.append("Username cannot contain spaces.")
-        if password and len(password) < 8:
-            errors.append("Password must be at least 8 characters long.")
+        if password and len(password) < 14:
+            errors.append("Password must be at least 14 characters long.")
+        if password and len(password) > 64:
+            errors.append("Password must be at most 64 characters long.")
+        if password and " " in password:
+            errors.append("Password must not contain spaces.")
         if password and password != confirm_password:
             errors.append("Passwords do not match.")
 

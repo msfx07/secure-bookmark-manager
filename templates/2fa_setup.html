@@ -60,6 +60,7 @@
         </p>
 
         <form method="POST" action="{{ url_for('auth.setup_2fa') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <div class="mb-4">
             <label for="token" class="form-label fw-medium">
               Verification Code <span class="text-danger">*</span>

@@ -10,6 +10,7 @@
       </div>
       <div class="card-body p-4">
         <form method="POST" action="{{ url_for('bookmarks.edit', id=bookmark.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <div class="mb-3">
             <label for="title" class="form-label fw-medium">
               Title <span class="text-danger">*</span>

@@ -2,11 +2,19 @@ import os
 from urllib.parse import urlparse
 from flask import Flask
 from flask_login import LoginManager
+from flask_wtf.csrf import CSRFProtect
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from models.auth_db import init_auth_db, create_default_admin, User
 from models.bookmark_db import init_bookmark_db
 from services.validator import start_background_validator
 
 app = Flask(__name__)
+
+# --- Session cookie hardening ---
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+# SESSION_COOKIE_SECURE is set after reading SECRET_KEY (needs production check)
 
 _secret_key = os.environ.get("SECRET_KEY", "").strip()
 if not _secret_key:
@@ -15,6 +23,20 @@ if not _secret_key:
         "Add a strong random value to your .env file before starting the application."
     )
 app.secret_key = _secret_key
+
+# Secure cookie only in production (not debug)
+app.config["SESSION_COOKIE_SECURE"] = not app.debug
+
+# --- CSRF Protection ---
+csrf = CSRFProtect(app)
+
+# --- Rate Limiting ---
+limiter = Limiter(
+    app=app,
+    key_func=get_remote_address,
+    default_limits=["200 per day", "60 per hour"],
+    storage_uri="memory://",
+)
 
 @app.template_filter("safe_url")
 def safe_url_filter(url: str) -> str:
@@ -45,7 +67,7 @@ def initialize_databases():
     init_bookmark_db()
     # Always ensure admin user exists
     if create_default_admin():
-        print("[INFO] Default admin user created: admin / Secure-Bookmark-Manager")
+        print("[INFO] Default admin user created. Change the password immediately after first login.")
 
 
 with app.app_context():
@@ -54,6 +76,9 @@ with app.app_context():
 from routes.auth import auth as auth_bp
 from routes.bookmarks import bookmarks as bookmarks_bp
 from routes.admin import admin as admin_bp
+
+# Exempt compliance pages from CSRF (they have no forms)
+CSRF_EXEMPT_BLUEPRINTS = set()
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(bookmarks_bp)

@@ -12,7 +12,9 @@ The Secure Bookmark Manager is designed with security as a core principle. This 
 
 - **Werkzeug Password Hashing** — All passwords are hashed using PBKDF2-SHA256 with automatic salting
 - **HIBP Breach Checking** — Passwords are checked against the Have I Been Pwned database before acceptance
-- **Default Admin Account** — Created on first run with credentials `admin` / `Secure-Bookmark-Manager`
+- **Unified Password Policy** — Minimum 14 characters, maximum 64 characters, no spaces allowed
+- **Rate Limiting** — Login and 2FA endpoints limited to 10 requests per minute per IP
+- **Default Admin Account** — Created on first run; password not logged to stdout
 - **No Public Registration** — User accounts are managed by administrators only
 
 ### Two-Factor Authentication (2FA)
@@ -24,7 +26,8 @@ The Secure Bookmark Manager is designed with security as a core principle. This 
 ### Session Security
 
 - **Cryptographic Session Signing** — Flask sessions are signed with a configurable `SECRET_KEY`
-- **Secure Cookie Flags** — Cookies use `HttpOnly`, `Secure`, and `SameSite` attributes
+- **Secure Cookie Flags** — Cookies use `HttpOnly`, `Secure`, and `SameSite=Lax` attributes
+- **CSRF Protection** — Flask-WTF provides cross-site request forgery protection on all state-changing operations
 - **Session Timeout** — Sessions expire after inactivity
 
 ### Database Security
@@ -36,8 +39,9 @@ The Secure Bookmark Manager is designed with security as a core principle. This 
 ### Input Validation
 
 - **URL Sanitization** — The `safe_url` Jinja2 filter prevents XSS via `javascript:`, `data:`, and `vbscript:` schemes
-- **CSRF Protection** — Flask-WTF provides cross-site request forgery protection
+- **SSRF Protection** — Private IP ranges, loopback, and link-local addresses are blocked
 - **Input Length Limits** — Enforced limits on form field lengths
+- **File Upload Limits** — Maximum 2 MB for bookmark imports
 
 ### Container Security
 
@@ -116,7 +120,8 @@ services:
 
 - Use a reverse proxy (nginx, Traefik) with TLS termination
 - Restrict access to port 5000 to localhost only
-- Implement rate limiting for login attempts
+- Rate limiting is built-in: 200 requests/day, 60 requests/hour globally
+- Login and 2FA endpoints have stricter limits: 10 requests/minute
 
 ### Database Backups
 
@@ -164,9 +169,10 @@ Default Credentials: admin / Secure-Bookmark-Manager
 
 | Version | Security Updates |
 |---------|------------------|
-| 1.0.0 | Initial release with password hashing, 2FA, CSRF protection |
+| 1.0.0 | Initial release with password hashing, 2FA |
 | 1.1.0 | Added HIBP breach checking, consolidated database |
 | 1.2.0 | Enhanced URL sanitization, improved session security, default admin account |
+| 1.3.0 | Added CSRF protection (Flask-WTF), rate limiting (Flask-Limiter), unified password policy, secure session cookies, enhanced .dockerignore |
 
 ---
 

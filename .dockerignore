@@ -1,9 +1,49 @@
-# Development / project metadata
+# Environment & secrets
+.env
+.env.*
+!.env.example
+
+# Git
 .git
 .gitignore
+
+# Documentation (not needed in image)
 *.md
-claude.md
-skills/
+LICENSE
+
+# Screenshots
+screenshot/
+
+# Dev compose (not needed in image)
+docker-compose.dev.yml
 
 # Local data directory (databases are in a named volume at runtime)
 data/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# IDE & editor
+.vscode/
+.idea/
+*.swp
+*~
+
+# Local notes and prompt skills
+claude.md
+skills/
+
+# CodeGraph
+.codegraph/
+.claude
+
+# OS noise
+.DS_Store
+Thumbs.db

@@ -99,6 +99,7 @@
           Check every saved link for broken or unreachable URLs.
         </p>
         <form method="POST" action="{{ url_for('bookmarks.validate') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <div class="d-grid">
             <button type="submit" class="btn btn-outline-warning btn-sm">
               <i class="bi bi-shield-check me-1"></i>Validate Bookmarks
@@ -185,6 +186,7 @@
               <form method="POST"
                     action="{{ url_for('bookmarks.import_bookmarks') }}"
                     enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <label for="import-file" class="form-label small fw-medium mb-1">
                   Restore from backup
                 </label>
@@ -529,10 +531,14 @@
 </div>
 
 <!-- Shared delete form — action set by JS before submit -->
-<form id="deleteForm" method="POST" style="display:none;"></form>
+<form id="deleteForm" method="POST" style="display:none;">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+</form>
 
 <!-- Shared bulk action form — populated and submitted by JS -->
-<form id="bulkForm" method="POST" style="display:none;"></form>
+<form id="bulkForm" method="POST" style="display:none;">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+</form>
 
 <script>
 (function () {
@@ -673,6 +679,7 @@
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content shadow border-danger">
       <form method="POST" action="{{ url_for('auth.disable_2fa') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="modal-header bg-danger text-white border-bottom-0">
           <h5 class="modal-title" id="disable2FALabel">
             <i class="bi bi-shield-x me-2"></i>Disable Two-Factor Authentication
@@ -720,6 +727,7 @@
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content shadow">
       <form method="POST" action="{{ url_for('auth.change_password') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="modal-header border-bottom">
           <h5 class="modal-title" id="changePasswordLabel">
             <i class="bi bi-key-fill me-2"></i>Change Password
@@ -791,6 +799,7 @@
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content shadow border-danger">
       <form method="POST" action="{{ url_for('auth.delete_account') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="modal-header bg-danger text-white border-bottom-0">
           <h5 class="modal-title" id="deleteAccountLabel">
             <i class="bi bi-exclamation-triangle-fill me-2"></i>Delete Account
@@ -834,6 +843,7 @@
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content shadow">
       <form method="POST" action="{{ url_for('bookmarks.add') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="modal-header border-bottom">
           <h5 class="modal-title" id="addBookmarkLabel">
             <i class="bi bi-bookmark-plus me-2"></i>Add Bookmark
@@ -896,6 +906,7 @@
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content shadow">
       <form method="POST" action="{{ url_for('bookmarks.update_category_icon') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="modal-header border-bottom">
           <h5 class="modal-title" id="changeCategoryIconLabel">
             <i class="bi bi-emoji-smile me-2"></i>Change Category Icon

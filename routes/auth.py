@@ -25,6 +25,9 @@ _2FA_EXEMPT = {"auth.verify_2fa", "auth.logout", "static"}
 
 _HIBP_HEADERS = {"User-Agent": "SecureBookmarkManager/1.0"}
 
+# Import limiter from app (set in app.py)
+from app import limiter
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -94,6 +97,7 @@ def enforce_2fa_checkpoint():
 # ---------------------------------------------------------------------------
 
 @auth.route("/login", methods=["GET", "POST"])
+@limiter.limit("10 per minute")
 def login():
     if current_user.is_authenticated:
         return redirect(url_for("bookmarks.dashboard"))
@@ -169,6 +173,7 @@ def setup_2fa():
 
 @auth.route("/2fa-verify", methods=["GET", "POST"])
 @login_required
+@limiter.limit("10 per minute")
 def verify_2fa():
     # Safety valves — redirect away if there is nothing to verify
     if not current_user.has_2fa:
