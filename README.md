@@ -30,6 +30,8 @@ A self-hosted, containerised bookmark manager built with Flask. Organise URLs in
 - **No public registration** — only administrators can create new user accounts
 - **Role-based access control** — single admin account with regular user roles
 - **Two-factor authentication** — optional TOTP via Google Authenticator, Authy, or any compatible app
+- **CSRF protection** — Flask-WTF cross-site request forgery protection on all forms
+- **Rate limiting** — built-in rate limiting with stricter limits on login and 2FA endpoints
 - **Bookmark CRUD** — add, edit, and delete bookmarks with title, URL, category, tags, and auto-scraped metadata
 - **Category organisation** — flat single-level categories with custom emoji icons per category
 - **Bulk delete** — multi-select bookmarks for batch deletion from the dashboard
@@ -47,7 +49,7 @@ A self-hosted, containerised bookmark manager built with Flask. Organise URLs in
 | Layer | Technology |
 |---|---|
 | Backend | Python 3.11, Flask 3.1.1, Flask-Login 0.6.3 |
-| Security | Werkzeug password hashing, PyOTP (TOTP), HIBP breach API |
+| Security | Werkzeug password hashing, PyOTP (TOTP), HIBP breach API, Flask-WTF (CSRF), Flask-Limiter (rate limiting) |
 | Database | SQLite3 (consolidated database) |
 | Frontend | Jinja2 templates, Bootstrap 5.3.2, Bootstrap Icons 1.11.3 |
 | Server | Gunicorn 23 |

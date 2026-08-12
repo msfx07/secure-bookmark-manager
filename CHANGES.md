@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [1.3.0] - 2026-08-12
+
+### Added
+- **CSRF Protection** — Flask-WTF cross-site request forgery protection on all 15 POST forms
+- **Rate Limiting** — Flask-Limiter with 10 req/min on login and 2FA endpoints, 200/day and 60/hour global limits
+- **Session Cookie Hardening** — `HttpOnly`, `Secure`, and `SameSite=Lax` attributes enforced
+- **Unified Password Policy** — Minimum 14 characters, maximum 64 characters, no spaces (admin and self-service)
+- **Enhanced .dockerignore** — Comprehensive exclusions for secrets, IDE files, and dev artifacts
+
+### Changed
+- **Default Admin Logging** — No longer prints password to stdout on first run
+- **Security Policy** — Updated `SECURITY.md` with CSRF, rate limiting, and password policy documentation
+
+---
+
 ## [1.2.0] - 2026-08-11
 
 ### Added

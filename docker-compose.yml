@@ -1,7 +1,7 @@
 services:
   web_app:
     build: .
-    image: bookmark-manager:v1.0
+    image: bookmark-manager:v1.3.0
     container_name: bookmark
     expose:
       - "5000"
