@@ -68,7 +68,7 @@ No local Python installation is required.
 
 ## Quick Start
 
-### Option A: Automated Deployment (Recommended)
+### Automated Deployment (Recommended)
 
 **1. Clone the repository**
 
@@ -105,6 +105,30 @@ http://localhost:5000
 | Password | `Secure-Bookmark-Manager` |
 
 > ⚠️ **Important:** Change the default password immediately after first login!
+
+### Production Deployment (Hardened)
+
+For production environments, use the hardened Docker Compose configuration:
+
+```bash
+docker compose -f docker-compose.prod.yml up --build -d
+```
+
+`docker-compose.prod.yml` applies the following security hardening:
+
+| Setting | Description |
+|---|---|
+| `read_only: true` | Read-only filesystem prevents runtime file modifications |
+| `tmpfs: /tmp` | Ephemeral `/tmp` with `noexec,nosuid` — blocks code execution |
+| `cap_drop: ALL` | Drops all Linux capabilities |
+| `no-new-privileges` | Prevents privilege escalation inside the container |
+| `user: 1000:1000` | Runs as non-root user |
+| Resource limits | Caps memory at 512 MB and CPU at 1 core |
+| Health check | Automatic container health monitoring on `/health` |
+| Log rotation | Limits log files to 10 MB × 3 files |
+| `expose` instead of `ports` | Port 5000 only accessible via the shared `proxy-net` network |
+
+> **Note:** The production file expects an existing Docker network called `proxy-net` (e.g. from an Nginx/Traefik reverse proxy). Create it with `docker network create proxy-net` if it doesn't already exist.
 
 ---
 
@@ -169,21 +193,27 @@ docker compose down -v
 secure-bookmark-manager/
 ├── Dockerfile
 ├── docker-compose.yml
-├── docker-compose.dev.yml
+├── docker-compose.prod.yml
 ├── requirements.txt
 ├── deploy.sh                 # Automated deployment script (recommended)
+├── seed_demo_users.py        # Seed script for demo users
 ├── app.py                    # App factory, LoginManager, DB init, blueprint registration
+├── CHANGES.md
+├── SECURITY.md
 ├── .dockerignore
 ├── .env                      # Local secrets (git-ignored)
 ├── data/                     # Local mirror of Docker volume (git-ignored)
 ├── models/
+│   ├── __init__.py
 │   ├── auth_db.py            # User model, password hashing, TOTP helpers
 │   └── bookmark_db.py        # Bookmark CRUD, category list/rename/emoji, search, validation
 ├── routes/
+│   ├── __init__.py
 │   ├── auth.py               # Login, logout, 2FA setup/verify/disable, change-password, delete-account
 │   ├── bookmarks.py          # Dashboard, CRUD, export, import, bulk-delete, category icon, link validate
 │   └── admin.py              # User management (admin only)
 ├── services/
+│   ├── __init__.py
 │   └── validator.py          # Async link health checker — background daemon + per-user trigger
 ├── templates/
 │   ├── base.html             # Bootstrap layout, navbar, dark mode, flash messages, footer
@@ -200,7 +230,8 @@ secure-bookmark-manager/
 │       ├── create_user.html  # Create user form (admin only)
 │       └── edit_user.html    # Edit user form (admin only)
 └── static/
-    └── css/custom.css
+    └── css/
+        └── custom.css
 ```
 
 ---
